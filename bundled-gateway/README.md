@@ -4,6 +4,52 @@
 
 嘉立创EDA 专业版扩展 — 为 AI 编程工具（OpenCode、Claude Code、Cursor、Cline、Continue、Windsurf、WorkBuddy、QwenCode、KimiCode、Trae 等）提供 WebSocket API 网关桥接服务。
 
+> **JLC_EDA-MCP 集成说明**
+>
+> 本目录中的 Run API Gateway v1.0.6 同时作为仓库根目录 **JLC_EDA-MCP v2.0** 的 EasyEDA 运行时 Gateway 使用。
+> 如果你是从 `mayjack0312/JLC_EDA-MCP` 使用本扩展，**不需要另外安装 easyeda-api Skill，也不需要单独启动 Bridge Server**；JLC_EDA-MCP 已内置 Bridge、API Catalog、760 个官方 API 的 MCP 调用入口以及 Full / Compact 两种模式。
+>
+> JLC_EDA-MCP 用户请优先阅读 [仓库根 README](../README.md) 和 [API 使用指南](../docs/API_USAGE.md)。本目录后半部分仍保留官方上游 Gateway + easyeda-api Skill 的独立使用方式，便于单独使用或二次开发。
+
+## 在 JLC_EDA-MCP 中使用（推荐）
+
+### 1. 组件关系
+
+```text
+AI Agent / MCP Client
+        │ MCP stdio
+        ▼
+JLC_EDA-MCP v2.0
+        │ 内置 localhost WebSocket Bridge
+        │ 127.0.0.1:49620-49629
+        ▼
+Run API Gateway v1.0.6
+        │ EasyEDA 页面运行时
+        ▼
+官方 EDA.* EasyEDA Pro API
+```
+
+JLC_EDA-MCP 当前根据 `@jlceda/pro-api-types` 0.4.23 自动生成 98 个命名空间、760 个公开 API 方法的目录和直接 MCP Tool。Gateway 本身不维护这 760 个 Tool；它负责连接 EasyEDA 页面运行时、接收 Bridge 请求并在页面上下文中执行。
+
+### 2. 最短安装步骤
+
+1. 在仓库根目录执行 `npm install && npm run build && npm test`；
+2. 在嘉立创EDA专业版导入本目录的 `run-api-gateway_v1.0.6.eext`；
+3. 在扩展管理器中启用本扩展，并允许 WebSocket / 外部交互权限；
+4. 启动根目录 MCP：`npm start`，或 Windows 下运行 `START_MCP_WINDOWS.bat`；
+5. 在 MCP Client 中调用 `easyeda_bridge_status`；
+6. 当返回 `count > 0` 后，即可使用 `easyeda_api_search` / `easyeda_api_describe` / `easyeda_api_call`，或 Full 模式下的 `eda_<namespace>_<method>` 直接工具。
+
+多窗口时，Gateway 会为每个连接生成独立 `windowId` 并向 Bridge 注册；可通过 `easyeda_select_window` 或调用参数中的 `windowId` 指定目标窗口。
+
+### 3. 连接与安全边界
+
+- Gateway 启动后扫描 `127.0.0.1:49620-49629` 并校验 Bridge 握手中的 `service: "easyeda-bridge"`；
+- 连接成功后注册随机 `windowId`，并通过心跳检测维持连接；
+- Bridge 只监听本机 loopback 地址，不对局域网或公网开放；
+- JLC_EDA-MCP 对外暴露的统一 API 调用只允许自动生成 Catalog 中的官方方法，并限制为 JSON 可序列化参数；
+- Gateway 作为运行时执行端会执行可信本机 Bridge 发来的请求，因此应只连接自己信任的本机 Bridge。
+
 ## 功能
 
 - 🔌 **自动连接** — 启动时自动扫描端口范围 49620-49629，发现并连接 Bridge Server
@@ -20,11 +66,23 @@
 └──────────────┘ 49620-49629 └─────────────────┘  49620-49629 └──────────┘
 ```
 
-## 配合使用
+## 两种使用模式
 
-本扩展需要配合 **easyeda-api** Skill 一起使用。该 Skill 负责启动 Bridge Server、提供 EasyEDA API 文档与调用约定，并负责 AI 与 EDA 之间的完整工作流。
+### JLC_EDA-MCP 集成模式
 
-## 快速开始
+使用本仓库根目录的 JLC_EDA-MCP 时，**无需 easyeda-api Skill**。MCP Server 自己负责：
+
+- 启动内置 Bridge；
+- 自动生成 API Catalog；
+- 提供 6 个 API 管理 / 连接 Tool；
+- 在 Full 模式注册 760 个直接 API Tool；
+- 在 Compact 模式通过搜索、描述、统一调用访问同一批 API。
+
+### 官方上游独立 Skill 模式
+
+如果你把 Run API Gateway 当作独立扩展使用，而不使用本仓库根目录的 JLC_EDA-MCP，则仍可按官方上游方案配合 **easyeda-api** Skill。该 Skill 负责启动自己的 Bridge Server、提供 EasyEDA API 文档与调用约定，并负责 AI 与 EDA 之间的工作流。
+
+## 官方上游独立 Skill 模式快速开始
 
 如果你已经熟悉终端、Node.js 和嘉立创EDA 扩展系统，可以直接走最短路径：
 

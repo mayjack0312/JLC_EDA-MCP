@@ -2,6 +2,9 @@
 
 > **Project**: EasyEDA Pro Extension — WebSocket API Gateway
 > **Purpose**: Bridge between AI coding tools (Claude Code, OpenCode, etc.) and EasyEDA Pro desktop client.
+> **Repository role**: In `mayjack0312/JLC_EDA-MCP`, this subproject is the bundled EasyEDA runtime Gateway used by the root JLC_EDA-MCP v2.0 server. The root server owns MCP stdio, API catalog/tool registration, window selection, and the localhost Bridge; this subproject owns EasyEDA-side port scanning, handshake, window registration, heartbeat/reconnect, and execution inside the EDA page runtime.
+>
+> **Integration constraint**: Preserve compatibility with the official Run API Gateway v1.0.6 behavior and its standalone upstream Skill workflow. Do not introduce MCP-specific tool registration into this subproject; that belongs in the repository root.
 
 ---
 

@@ -1,3 +1,14 @@
+# JLC_EDA-MCP repository integration — 2026-09-22
+
+> Documentation-only integration note. The bundled extension artifact remains official **Run API Gateway v1.0.6**; no extension runtime version was changed.
+
+1. Clarify that this directory is the EasyEDA runtime Gateway bundled with JLC_EDA-MCP v2.0.
+2. Add the JLC_EDA-MCP architecture: MCP stdio → embedded localhost Bridge → Run API Gateway → EasyEDA Pro `EDA.*`.
+3. Document ports `127.0.0.1:49620-49629`, handshake service `easyeda-bridge`, per-window `windowId`, and multi-window selection.
+4. Clarify that JLC_EDA-MCP integrated mode does **not** require the separate easyeda-api Skill or a separately launched Bridge Server.
+5. Keep the original upstream easyeda-api Skill workflow as a supported standalone mode.
+6. Add links back to the repository-root API usage and troubleshooting documentation.
+
 # 1.0.6
 
 1. 拆分文档为 README.md / README.en.md / FAQ.md / FAQ.en.md，README 只留快速路径，FAQ 留所有排查细节

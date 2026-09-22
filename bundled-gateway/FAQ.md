@@ -4,10 +4,50 @@
 
 本文档面向遇到问题或需要深入了解的用户，包含完整的新手教程、故障排查、组件职责、示例提示词与开发者模式。
 
-如果你只需要走最短路径，请回到 [README.md](./README.md) 的「快速开始」章节。
+如果你只需要走最短路径，请回到 [README.md](./README.md) 的快速开始章节。
+
+> 如果你是从仓库根目录 **JLC_EDA-MCP v2.0** 使用本 Gateway，请先看下面的「JLC_EDA-MCP 集成模式」。后续大篇幅的 OpenCode / easyeda-api Skill 教程主要保留给官方上游独立 Skill 模式。
+
+## JLC_EDA-MCP 集成模式
+
+### 是否还需要 easyeda-api Skill？
+
+**不需要。**
+
+JLC_EDA-MCP 已经包含：
+
+- MCP stdio Server；
+- 内置 `easyeda-bridge`；
+- 98 个命名空间 / 760 个公开 API 方法的自动生成 Catalog；
+- 6 个 API 管理 / 连接 Tool；
+- Full 模式下 760 个直接 API Tool；
+- Compact 模式下的 API 搜索、描述和统一调用。
+
+本 Gateway 在这条链路中的职责是把 EasyEDA Pro 页面运行时接到 JLC_EDA-MCP 的本机 Bridge：
+
+```text
+MCP Client → JLC_EDA-MCP → 127.0.0.1:49620-49629 → Run API Gateway → EDA.*
+```
+
+### 最短验证流程
+
+1. 根目录启动 JLC_EDA-MCP；
+2. EasyEDA Pro 中启用 `run-api-gateway_v1.0.6.eext`；
+3. Gateway 自动扫描 `49620-49629`；
+4. MCP 调用 `easyeda_bridge_status`；
+5. `count > 0` 表示至少一个 EDA 窗口已注册；
+6. 使用 `easyeda_api_search` → `easyeda_api_describe` → `easyeda_api_call` 验证一个 API；
+7. 多窗口时使用 `easyeda_select_window` 或显式 `windowId`。
+
+如果 `count: 0`，优先检查 Gateway 是否启用、是否允许外部交互、MCP 是否已启动，以及本机安全软件是否阻止 loopback WebSocket。更完整的 MCP 侧排查见 [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)。
+
+### 与下方教程的关系
+
+下方「从零开始使用教程」仍然是 **官方上游独立 Skill 模式**：OpenCode + easyeda-api Skill + Run API Gateway。它不是 JLC_EDA-MCP 集成模式的必需步骤，保留它是为了兼容 Gateway 原本的独立使用方式和上游文档。
 
 ## 目录
 
+- [JLC_EDA-MCP 集成模式](#jlc_eda-mcp-集成模式)
 - [从零开始使用教程](#从零开始使用教程)
   - [0. 你最终会得到什么](#0-你最终会得到什么)
   - [1. 准备环境](#1-准备环境)
@@ -30,7 +70,7 @@
 
 ## 从零开始使用教程
 
-这一节按「全新电脑首次配置」的视角来写。你只要依次完成以下步骤，就可以让 OpenCode 通过本扩展调用嘉立创EDA 专业版中的 API。
+这一节保留官方上游 **OpenCode + easyeda-api Skill + Run API Gateway** 的独立使用方式，按「全新电脑首次配置」的视角来写。若你使用仓库根目录的 JLC_EDA-MCP，请使用上面的集成模式，无需执行本节的 Skill 安装步骤。
 
 ### 0. 你最终会得到什么
 

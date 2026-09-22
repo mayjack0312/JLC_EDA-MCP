@@ -4,10 +4,50 @@
 
 This document is for users who hit problems or want a deeper understanding. It contains the full from-scratch tutorial, troubleshooting flow, component responsibilities, prompt examples, and developer-mode instructions.
 
-If you only need the shortest path, jump back to [README.md](./README.md) → "Quick Start".
+If you only need the shortest path, jump back to [README.en.md](./README.en.md).
+
+> If you are using this Gateway through the repository-root **JLC_EDA-MCP v2.0**, read the integrated-mode section below first. The long OpenCode / easyeda-api Skill tutorial that follows is retained mainly for the official upstream standalone Skill workflow.
+
+## JLC_EDA-MCP Integrated Mode
+
+### Do I still need the easyeda-api Skill?
+
+**No.**
+
+JLC_EDA-MCP already contains:
+
+- the MCP stdio server;
+- the embedded `easyeda-bridge`;
+- a generated catalog covering 98 namespaces / 760 public API methods;
+- six API management / connection tools;
+- 760 generated direct API tools in Full mode;
+- API search, description, and unified calls in Compact mode.
+
+In this setup the Gateway's role is to connect the EasyEDA Pro page runtime to JLC_EDA-MCP's local bridge:
+
+```text
+MCP Client → JLC_EDA-MCP → 127.0.0.1:49620-49629 → Run API Gateway → EDA.*
+```
+
+### Short verification flow
+
+1. Start JLC_EDA-MCP from the repository root.
+2. Enable `run-api-gateway_v1.0.6.eext` inside EasyEDA Pro.
+3. The Gateway scans ports `49620-49629`.
+4. Call `easyeda_bridge_status` from the MCP client.
+5. `count > 0` means at least one EasyEDA window has registered.
+6. Verify an API with `easyeda_api_search` → `easyeda_api_describe` → `easyeda_api_call`.
+7. For multiple windows, use `easyeda_select_window` or pass an explicit `windowId`.
+
+If you see `count: 0`, first check whether the Gateway is enabled, external interaction is allowed, the MCP is running, and local security software is not blocking loopback WebSockets. For MCP-side troubleshooting, see [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md).
+
+### Relationship to the tutorial below
+
+The following from-scratch tutorial remains the **official upstream standalone Skill mode**: OpenCode + easyeda-api Skill + Run API Gateway. It is not required for JLC_EDA-MCP integrated mode; it is retained for standalone Gateway use and upstream compatibility.
 
 ## Table of Contents
 
+- [JLC_EDA-MCP Integrated Mode](#jlc_eda-mcp-integrated-mode)
 - [From-Scratch Tutorial](#from-scratch-tutorial)
   - [0. What You Will End Up With](#0-what-you-will-end-up-with)
   - [1. Prerequisites](#1-prerequisites)
@@ -30,7 +70,7 @@ If you only need the shortest path, jump back to [README.md](./README.md) → "Q
 
 ## From-Scratch Tutorial
 
-This section is written from the perspective of "first-time setup on a fresh machine". Follow the steps in order to let OpenCode call the EasyEDA Pro APIs through this extension.
+This section preserves the official upstream **OpenCode + easyeda-api Skill + Run API Gateway** standalone workflow and is written from the perspective of first-time setup on a fresh machine. If you use the repository-root JLC_EDA-MCP, use the integrated mode above instead; the Skill-installation steps in this section are not required.
 
 ### 0. What You Will End Up With
 

@@ -4,6 +4,52 @@
 
 EasyEDA Pro extension — provides a WebSocket API gateway bridge for AI coding tools (OpenCode, Claude Code, Cursor, Cline, Continue, Windsurf, WorkBuddy, QwenCode, KimiCode, Trae, etc.).
 
+> **JLC_EDA-MCP integration**
+>
+> The Run API Gateway v1.0.6 in this directory is also the EasyEDA runtime gateway bundled with the repository-root **JLC_EDA-MCP v2.0**.
+> When using it through `mayjack0312/JLC_EDA-MCP`, you **do not need to install the easyeda-api Skill or start a separate Bridge Server**. JLC_EDA-MCP already provides the embedded bridge, generated API catalog, MCP access to all 760 currently cataloged official APIs, and Full / Compact tool profiles.
+>
+> JLC_EDA-MCP users should start with the [repository README](../README.en.md) and [API usage guide](../docs/API_USAGE.md). The later sections of this document retain the official upstream Gateway + easyeda-api Skill workflow for standalone use and development.
+
+## Using It with JLC_EDA-MCP (Recommended)
+
+### 1. Component relationship
+
+```text
+AI Agent / MCP Client
+        │ MCP stdio
+        ▼
+JLC_EDA-MCP v2.0
+        │ embedded localhost WebSocket Bridge
+        │ 127.0.0.1:49620-49629
+        ▼
+Run API Gateway v1.0.6
+        │ EasyEDA page runtime
+        ▼
+Official EasyEDA Pro EDA.* APIs
+```
+
+JLC_EDA-MCP currently generates a catalog for 98 namespaces and 760 public API methods from `@jlceda/pro-api-types` 0.4.23. The Gateway itself does not maintain those 760 MCP tools; it connects the EasyEDA page runtime, receives bridge requests, and executes them in page context.
+
+### 2. Shortest setup
+
+1. From the repository root, run `npm install && npm run build && npm test`.
+2. Import `run-api-gateway_v1.0.6.eext` from this directory into EasyEDA Pro.
+3. Enable the extension and allow the required WebSocket / external-interaction permission.
+4. Start the root MCP with `npm start`, or use `START_MCP_WINDOWS.bat` on Windows.
+5. Call `easyeda_bridge_status` from the MCP client.
+6. Once `count > 0`, use `easyeda_api_search` / `easyeda_api_describe` / `easyeda_api_call`, or the Full-profile direct tools named `eda_<namespace>_<method>`.
+
+With multiple EasyEDA windows, each Gateway connection generates and registers its own `windowId`. Select the target through `easyeda_select_window` or pass `windowId` on an API call.
+
+### 3. Connection and trust boundary
+
+- The Gateway scans `127.0.0.1:49620-49629` and validates `service: "easyeda-bridge"` in the bridge handshake.
+- After connecting it registers a random `windowId` and maintains the connection with heartbeat checks.
+- The JLC_EDA-MCP bridge binds only to the local loopback interface, not to the LAN or public network.
+- JLC_EDA-MCP's public unified API entry point only accepts methods from the generated official API catalog and JSON-serializable arguments.
+- The Gateway is the runtime executor and executes requests received from the trusted local bridge, so it should only be connected to a bridge you trust.
+
 ## Features
 
 - 🔌 **Auto-Connect** — On startup, automatically scans port range 49620-49629 to discover and connect to the Bridge Server.
@@ -20,11 +66,23 @@ EasyEDA Pro extension — provides a WebSocket API gateway bridge for AI coding 
 └──────────────┘ 49620-49629 └─────────────────┘  49620-49629 └──────────┘
 ```
 
-## Companion Skill
+## Two Usage Modes
 
-This extension must be used together with the **easyeda-api** Skill. That Skill is responsible for starting the Bridge Server, providing EasyEDA API documentation and calling conventions, and orchestrating the full workflow between AI and EDA.
+### JLC_EDA-MCP integrated mode
 
-## Quick Start
+When using the repository-root JLC_EDA-MCP, **the easyeda-api Skill is not required**. The MCP server itself:
+
+- starts the embedded bridge;
+- generates the API catalog;
+- exposes six API management / connection tools;
+- registers 760 direct API tools in Full mode;
+- keeps all APIs available through search / describe / unified calls in Compact mode.
+
+### Official upstream standalone Skill mode
+
+If you use Run API Gateway as a standalone extension without the repository-root JLC_EDA-MCP, you can still follow the official upstream workflow with the **easyeda-api** Skill. In that mode the Skill starts its own Bridge Server and supplies the API documentation and calling workflow.
+
+## Official Upstream Standalone Skill Quick Start
 
 If you are already familiar with the terminal, Node.js, and the EasyEDA extension system, follow the shortest path:
 
