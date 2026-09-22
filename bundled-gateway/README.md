@@ -2,149 +2,233 @@
 
 [English](./README.en.md) · [FAQ 简体中文](./FAQ.md) · [FAQ English](./FAQ.en.md)
 
-嘉立创EDA 专业版扩展 — 为 AI 编程工具（OpenCode、Claude Code、Cursor、Cline、Continue、Windsurf、WorkBuddy、QwenCode、KimiCode、Trae 等）提供 WebSocket API 网关桥接服务。
+嘉立创EDA 专业版扩展，用于把正在运行的 EasyEDA Pro 页面连接到 **JLC_EDA-MCP v2.0** 的本机 Bridge。
 
-> **JLC_EDA-MCP 集成说明**
+> **当前仓库推荐用法**
 >
-> 本目录中的 Run API Gateway v1.0.6 同时作为仓库根目录 **JLC_EDA-MCP v2.0** 的 EasyEDA 运行时 Gateway 使用。
-> 如果你是从 `mayjack0312/JLC_EDA-MCP` 使用本扩展，**不需要另外安装 easyeda-api Skill，也不需要单独启动 Bridge Server**；JLC_EDA-MCP 已内置 Bridge、API Catalog、760 个官方 API 的 MCP 调用入口以及 Full / Compact 两种模式。
->
-> JLC_EDA-MCP 用户请优先阅读 [仓库根 README](../README.md) 和 [API 使用指南](../docs/API_USAGE.md)。本目录后半部分仍保留官方上游 Gateway + easyeda-api Skill 的独立使用方式，便于单独使用或二次开发。
+> 使用 `mayjack0312/JLC_EDA-MCP` 时，**不需要另外安装 easyeda-api Skill，不需要 ClawHub，也不需要单独启动另一个 Bridge Server**。
+> JLC_EDA-MCP 根目录已经包含 MCP Server、Bridge、API Catalog、Full / Compact 两种 Tool 模式以及 760 个当前官方类型定义公开 API 的调用入口。
 
-## 在 JLC_EDA-MCP 中使用（推荐）
-
-### 1. 组件关系
+## 架构
 
 ```text
 AI Agent / MCP Client
         │ MCP stdio
         ▼
 JLC_EDA-MCP v2.0
-        │ 内置 localhost WebSocket Bridge
+        │ embedded easyeda-bridge
         │ 127.0.0.1:49620-49629
         ▼
 Run API Gateway v1.0.6
         │ EasyEDA 页面运行时
         ▼
-官方 EDA.* EasyEDA Pro API
+官方 EasyEDA Pro EDA.* API
 ```
 
-JLC_EDA-MCP 当前根据 `@jlceda/pro-api-types` 0.4.23 自动生成 98 个命名空间、760 个公开 API 方法的目录和直接 MCP Tool。Gateway 本身不维护这 760 个 Tool；它负责连接 EasyEDA 页面运行时、接收 Bridge 请求并在页面上下文中执行。
+JLC_EDA-MCP 当前根据 `@jlceda/pro-api-types` 0.4.23 自动生成：
 
-### 2. 最短安装步骤
+- 98 个 EDA 根命名空间
+- 760 个公开 API 方法
+- 760 个 Full 模式直接 API Tool
+- 6 个 API 管理 / 连接 Tool
+- 3 个扩展开发 / 调试 Tool
+- Full 模式合计 769 个 MCP Tool
 
-1. 在仓库根目录执行 `npm install && npm run build && npm test`；
-2. 在嘉立创EDA专业版导入本目录的 `run-api-gateway_v1.0.6.eext`；
-3. 在扩展管理器中启用本扩展，并允许 WebSocket / 外部交互权限；
-4. 启动根目录 MCP：`npm start`，或 Windows 下运行 `START_MCP_WINDOWS.bat`；
-5. 在 MCP Client 中调用 `easyeda_bridge_status`；
-6. 当返回 `count > 0` 后，即可使用 `easyeda_api_search` / `easyeda_api_describe` / `easyeda_api_call`，或 Full 模式下的 `eda_<namespace>_<method>` 直接工具。
+Gateway 本身不维护这 760 个 Tool。它负责在 EasyEDA 页面上下文中：
 
-多窗口时，Gateway 会为每个连接生成独立 `windowId` 并向 Bridge 注册；可通过 `easyeda_select_window` 或调用参数中的 `windowId` 指定目标窗口。
+- 扫描并连接本机 Bridge
+- 验证 `service: "easyeda-bridge"` 握手
+- 为每个 EDA 窗口注册独立 `windowId`
+- 接收 Bridge 请求并在页面运行时执行
+- 返回结果或错误
+- 维持心跳并在掉线后自动重连
 
-### 3. 连接与安全边界
+## 快速开始
 
-- Gateway 启动后扫描 `127.0.0.1:49620-49629` 并校验 Bridge 握手中的 `service: "easyeda-bridge"`；
-- 连接成功后注册随机 `windowId`，并通过心跳检测维持连接；
-- Bridge 只监听本机 loopback 地址，不对局域网或公网开放；
-- JLC_EDA-MCP 对外暴露的统一 API 调用只允许自动生成 Catalog 中的官方方法，并限制为 JSON 可序列化参数；
-- Gateway 作为运行时执行端会执行可信本机 Bridge 发来的请求，因此应只连接自己信任的本机 Bridge。
+### 1. 构建并启动 JLC_EDA-MCP
 
-## 功能
+在仓库根目录执行：
 
-- 🔌 **自动连接** — 启动时自动扫描端口范围 49620-49629，发现并连接 Bridge Server
-- 🤝 **握手验证** — 通过 WebSocket handshake 验证服务身份 (`easyeda-bridge`)
-- 🔄 **自动重连** — 心跳检测 + 断线自动重新扫描端口
-- 🤖 **代码执行** — 接收来自 AI 的代码请求，在 EDA 环境中执行并返回结果
-
-## 架构
-
-```
-┌──────────────┐  HTTP/WS    ┌─────────────────┐  WebSocket   ┌──────────┐
-│  AI Agent    │ ◄─────────► │  Bridge Server  │ ◄──────────► │ 本扩展    │
-│ (Skill Tool) │ Port Range  │  (Node.js)      │  Port Range  │ (EasyEDA)│
-└──────────────┘ 49620-49629 └─────────────────┘  49620-49629 └──────────┘
+```bash
+npm install
+npm run build
+npm test
+npm start
 ```
 
-## 两种使用模式
+Windows 也可以直接运行：
 
-### JLC_EDA-MCP 集成模式
+```text
+START_MCP_WINDOWS.bat
+```
 
-使用本仓库根目录的 JLC_EDA-MCP 时，**无需 easyeda-api Skill**。MCP Server 自己负责：
+### 2. 在 EasyEDA Pro 中安装 Gateway
 
-- 启动内置 Bridge；
-- 自动生成 API Catalog；
-- 提供 6 个 API 管理 / 连接 Tool；
-- 在 Full 模式注册 760 个直接 API Tool；
-- 在 Compact 模式通过搜索、描述、统一调用访问同一批 API。
+导入本目录已经附带的：
 
-### 官方上游独立 Skill 模式
+```text
+bundled-gateway/run-api-gateway_v1.0.6.eext
+```
 
-如果你把 Run API Gateway 当作独立扩展使用，而不使用本仓库根目录的 JLC_EDA-MCP，则仍可按官方上游方案配合 **easyeda-api** Skill。该 Skill 负责启动自己的 Bridge Server、提供 EasyEDA API 文档与调用约定，并负责 AI 与 EDA 之间的工作流。
+在扩展管理器中启用扩展，并允许它使用 WebSocket / 外部交互能力。
 
-## 官方上游独立 Skill 模式快速开始
+扩展正常加载后，顶部会出现 **API Gateway** 菜单。
 
-如果你已经熟悉终端、Node.js 和嘉立创EDA 扩展系统，可以直接走最短路径：
+### 3. 验证连接
 
-1. 安装 **Node.js 22 LTS** 或更高版本：<https://nodejs.org/zh-cn/download>
-2. 安装你的 AI 编程工具（任选其一）：
-  - **OpenCode**：`npm install -g opencode-ai`
-  - **Claude Code / QwenCode / KimiCode / WorkBuddy**：参考各自官网的安装说明
-  - **Cursor / Windsurf / Trae**：从官网下载安装包双击安装
-  - **Cline / Continue**：在 VS Code 扩展商店搜索安装
-3. 把 **easyeda-api** 安装到 AI 工具的全局 Skill 目录：
+在 MCP Client 中调用：
 
-  **让 AI Agent 一句话代为安装**（推荐）：根据你使用的工具复制对应版本发给它：
+```text
+easyeda_bridge_status
+```
 
-  - **OpenCode**：
-    > 请帮我从 <https://github.com/easyeda/easyeda-api-skill> 安装 easyeda-api skill 到 OpenCode 的全局 Skill 目录
+当返回的 `count > 0` 时，说明至少一个 EasyEDA 窗口已经注册到 Bridge。
 
-  - **Claude Code**：
-    > 请帮我从 <https://github.com/easyeda/easyeda-api-skill> 安装 easyeda-api skill 到 Claude Code 的全局 Skill 目录
+之后建议按下面顺序调用：
 
-  - **Cursor / Cline / Continue / Windsurf / WorkBuddy / QwenCode / KimiCode / Trae**：
-    > 请帮我从 <https://github.com/easyeda/easyeda-api-skill> 下载并安装 easyeda-api skill
+```text
+easyeda_api_search
+    ↓
+easyeda_api_describe
+    ↓
+easyeda_api_call
+```
 
-  **手动下载并解压**：如果手边没有 AI Agent，可以下载 zip 后解压到全局 Skill 目录：
-  - 下载地址：<https://image.lceda.cn/files/easyeda-api-skill.zip>
-  - 解压目标：`~/.config/opencode/skills/easyeda-api/`（OpenCode 路径；其他工具请参考各自文档的全局 skills 目录）
-  - 详细步骤见 [FAQ.md § 5.2](./FAQ.md#52-如果命令安装失败如何手动下载并安装-skill)
+Full 模式下，也可以直接使用自动生成的：
 
-  进阶用户也可以使用 `npx clawhub@latest install ...` 的命令行方式，详见 [FAQ.md § 5.1](./FAQ.md#51-从-clawhub-单行命令安装)。
-4. 启动 AI 工具：
-  - **OpenCode / Claude Code / QwenCode / KimiCode**：在终端运行 `opencode` / `claude` / `qwencode` / `kimi`（或对应命令）
-  - **Cursor / Windsurf / Trae / WorkBuddy**：双击桌面图标启动
-  - **Cline / Continue**：打开 VS Code
-5. 首次使用时按工具提示登录或选择模型，OpenCode 中可执行 `/connect` 选择免费模型
-6. 在嘉立创EDA 专业版安装 **Run API Gateway** 扩展，并在扩展管理器中勾选 **允许外部交互** 与 **显示在顶部菜单**
-7. 打开嘉立创EDA，看到顶部 **API Gateway** 菜单即可
-8. 回到 AI 工具，使用 `/easyeda-api skill` 让它帮你做事，例如：
-  - `使用 /easyeda-api skill 帮我检查当前原理图`
-  - `使用 /easyeda-api skill 帮我画一个 NE555 最小系统`
+```text
+eda_<namespace>_<method>
+```
 
-如果你是首次接触这些工具，请阅读 [FAQ.md](./FAQ.md) 中的「从零开始使用教程」章节，里面有完整的逐步说明。
+例如一个方法的完整 ID 可能是：
 
-## 菜单操作
+```text
+dmt_Project.getCurrentProjectInfo
+```
 
-| 菜单项 | 说明 |
-|--------|------|
-| **Reconnect** | 手动重新扫描端口并连接 Bridge Server |
-| **Stop Connection** | 断开当前连接 |
-| **Toggle Auto-Connect Status** | 切换自动连接状态 |
-| **About...** | 显示版本和连接状态 |
+## Full 与 Compact
 
-## 进阶内容
+### Full
 
-连接失败、命令提示词、各组件职责、开发者本地调试模式等内容请查阅：
+默认模式。注册 760 个直接 API Tool，适合 MCP Client 能承受较大 `tools/list` 的场景。
 
-- [FAQ 简体中文](./FAQ.md) — 详细的环境准备、安装步骤、故障排查与示例
-- [FAQ English](./FAQ.en.md) — Detailed setup, troubleshooting and examples
+### Compact
 
-也可直接访问 GitHub 在线版本：
+如果客户端因为 Tool 数量过多出现超时、上下文膨胀或工具列表限制，可以设置：
 
-- <https://github.com/easyeda/eext-run-api-gateway/blob/main/FAQ.md>
-- <https://github.com/easyeda/eext-run-api-gateway/blob/main/FAQ.en.md>
+**PowerShell**
 
-## 开源许可
+```powershell
+$env:EASYEDA_TOOL_PROFILE="compact"
+npm start
+```
 
-本扩展使用 [Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/) 开源许可协议。
+**cmd**
+
+```bat
+set EASYEDA_TOOL_PROFILE=compact
+npm start
+```
+
+Compact 模式不会注册 760 个直接 Tool，但完整 API Catalog 仍然可通过：
+
+- `easyeda_api_catalog`
+- `easyeda_api_search`
+- `easyeda_api_describe`
+- `easyeda_api_call`
+
+访问。
+
+## 多窗口
+
+每一个连接到 Bridge 的 EasyEDA 窗口都会获得独立 `windowId`。
+
+当同时打开多个 EasyEDA 窗口时，可以使用：
+
+```text
+easyeda_bridge_status
+easyeda_select_window
+```
+
+或者在支持的 API 调用中显式传入 `windowId`，避免把操作发到错误窗口。
+
+## 连接机制
+
+Gateway 会扫描：
+
+```text
+127.0.0.1:49620
+...
+127.0.0.1:49629
+```
+
+并连接：
+
+```text
+ws://127.0.0.1:<port>/eda
+```
+
+连接成功必须满足握手：
+
+```json
+{
+  "type": "handshake",
+  "service": "easyeda-bridge"
+}
+```
+
+之后 Gateway 生成随机 `windowId` 并向 Bridge 注册。
+
+Gateway 内置心跳检测；连接异常时会关闭旧连接并重新扫描端口。
+
+## 菜单
+
+| 菜单项 | 作用 |
+|---|---|
+| **Reconnect** | 重新扫描端口并连接 Bridge |
+| **Stop Connection** | 停止当前连接与重试 |
+| **Toggle Auto-Connect Status** | 开启 / 关闭启动自动连接 |
+| **About...** | 查看版本、端口、窗口连接状态 |
+
+## 常见问题
+
+### `easyeda_bridge_status` 返回 `count: 0`
+
+依次确认：
+
+1. 根目录 JLC_EDA-MCP 已经启动；
+2. EasyEDA Pro 正在运行；
+3. `run-api-gateway_v1.0.6.eext` 已启用；
+4. 扩展具有外部交互 / WebSocket 权限；
+5. 本机安全软件没有拦截 loopback WebSocket；
+6. 端口 `49620-49629` 没有被不相关程序占用。
+
+完整排查请看 [FAQ.md](./FAQ.md) 和 [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md)。
+
+### Tool 太多
+
+切换到 Compact 模式。
+
+### 多窗口操作错对象
+
+先调用 `easyeda_bridge_status` 查看窗口，再使用 `easyeda_select_window`。
+
+## 上游兼容说明
+
+本目录的 Gateway 源自官方 Run API Gateway v1.0.6，并保留其独立运行能力。
+
+但是在 **JLC_EDA-MCP 仓库文档中不再推荐或维护旧的 easyeda-api Skill / ClawHub 安装流程**。如果你专门需要官方上游的独立 Skill 工作流，请参考对应上游项目自己的文档；不要把那套流程与本仓库的 JLC_EDA-MCP 集成模式混用。
+
+## 进一步阅读
+
+- [JLC_EDA-MCP 中文 README](../README.md)
+- [API 使用指南](../docs/API_USAGE.md)
+- [架构说明](../docs/ARCHITECTURE.md)
+- [API 覆盖报告](../docs/COVERAGE_REPORT.md)
+- [故障排查](../docs/TROUBLESHOOTING.md)
+- [本 Gateway FAQ](./FAQ.md)
+- [开发约定](./AGENTS.md)
+
+## License
+
+本扩展继续遵循仓库中附带的 Apache License 2.0。

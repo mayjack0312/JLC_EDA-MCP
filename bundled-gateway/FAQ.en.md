@@ -1,612 +1,273 @@
-# Run API Gateway — FAQ & Advanced Usage
+# Run API Gateway — FAQ
 
-[English](./README.en.md) · [简体中文](./README.md) · [FAQ 简体中文](./FAQ.md)
+[简体中文](./FAQ.md) · [Gateway README](./README.en.md) · [JLC_EDA-MCP README](../README.en.md)
 
-This document is for users who hit problems or want a deeper understanding. It contains the full from-scratch tutorial, troubleshooting flow, component responsibilities, prompt examples, and developer-mode instructions.
+This document describes the **current JLC_EDA-MCP v2.0 integrated workflow only**. The legacy easyeda-api Skill, ClawHub, Skill ZIP download, and OpenCode-specific installation flow are no longer recommended by this repository.
 
-If you only need the shortest path, jump back to [README.en.md](./README.en.md).
+## 1. What do I actually need to install?
 
-> If you are using this Gateway through the repository-root **JLC_EDA-MCP v2.0**, read the integrated-mode section below first. The long OpenCode / easyeda-api Skill tutorial that follows is retained mainly for the official upstream standalone Skill workflow.
+Only three pieces are required:
 
-## JLC_EDA-MCP Integrated Mode
+1. **JLC_EDA-MCP v2.0** — the MCP server at the repository root;
+2. **Run API Gateway v1.0.6** — `run-api-gateway_v1.0.6.eext` bundled in this directory;
+3. **An MCP-capable client / agent** — configured to launch or connect to the root MCP server.
 
-### Do I still need the easyeda-api Skill?
+You do not need an extra easyeda-api Skill or a second Bridge Server.
 
-**No.**
-
-JLC_EDA-MCP already contains:
-
-- the MCP stdio server;
-- the embedded `easyeda-bridge`;
-- a generated catalog covering 98 namespaces / 760 public API methods;
-- six API management / connection tools;
-- 760 generated direct API tools in Full mode;
-- API search, description, and unified calls in Compact mode.
-
-In this setup the Gateway's role is to connect the EasyEDA Pro page runtime to JLC_EDA-MCP's local bridge:
+## 2. What is the correct data path?
 
 ```text
-MCP Client → JLC_EDA-MCP → 127.0.0.1:49620-49629 → Run API Gateway → EDA.*
+MCP Client
+   ↓ stdio
+JLC_EDA-MCP
+   ↓ localhost WebSocket
+127.0.0.1:49620-49629
+   ↓
+Run API Gateway
+   ↓
+EasyEDA Pro EDA.*
 ```
 
-### Short verification flow
+## 3. Why is the Gateway still needed?
 
-1. Start JLC_EDA-MCP from the repository root.
-2. Enable `run-api-gateway_v1.0.6.eext` inside EasyEDA Pro.
-3. The Gateway scans ports `49620-49629`.
-4. Call `easyeda_bridge_status` from the MCP client.
-5. `count > 0` means at least one EasyEDA window has registered.
-6. Verify an API with `easyeda_api_search` → `easyeda_api_describe` → `easyeda_api_call`.
-7. For multiple windows, use `easyeda_select_window` or pass an explicit `windowId`.
+The MCP server runs in Node.js, while the official `eda.*` APIs live in the EasyEDA Pro page runtime.
 
-If you see `count: 0`, first check whether the Gateway is enabled, external interaction is allowed, the MCP is running, and local security software is not blocking loopback WebSockets. For MCP-side troubleshooting, see [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md).
+The Gateway connects those environments by:
 
-### Relationship to the tutorial below
+- connecting to the local bridge;
+- executing requests in EasyEDA page context;
+- returning results / errors to the MCP server;
+- registering a separate `windowId` for each EasyEDA window;
+- maintaining heartbeat and reconnect behavior.
 
-The following from-scratch tutorial remains the **official upstream standalone Skill mode**: OpenCode + easyeda-api Skill + Run API Gateway. It is not required for JLC_EDA-MCP integrated mode; it is retained for standalone Gateway use and upstream compatibility.
+## 4. Where does the Gateway connect?
 
-## Table of Contents
+It scans only:
 
-- [JLC_EDA-MCP Integrated Mode](#jlc_eda-mcp-integrated-mode)
-- [From-Scratch Tutorial](#from-scratch-tutorial)
-  - [0. What You Will End Up With](#0-what-you-will-end-up-with)
-  - [1. Prerequisites](#1-prerequisites)
-  - [2. Install Node.js](#2-install-nodejs)
-  - [3. Install OpenCode](#3-install-opencode)
-  - [4. First Launch and Model Setup](#4-first-launch-and-model-setup)
-  - [5. Install the EasyEDA API Skill](#5-install-the-easyeda-api-skill)
-  - [6. Install This Extension in EasyEDA Pro](#6-install-this-extension-in-easyeda-pro)
-  - [7. Open EDA and Wait for the Extension](#7-open-eda-and-wait-for-the-extension)
-  - [8. Send the Start Command from OpenCode](#8-send-the-start-command-from-opencode)
-  - [9. Verify That EDA Is Really Reachable](#9-verify-that-eda-is-really-reachable)
-  - [10. Recommended Newbie Sequence (Copy-Paste Friendly)](#10-recommended-newbie-sequence-copy-paste-friendly)
-- [Troubleshooting Connection Failures](#troubleshooting-connection-failures)
-- [Copy-Paste Prompt Examples](#copy-paste-prompt-examples)
-- [What Each Component Does](#what-each-component-does)
-- [Developer Local Debug Mode](#developer-local-debug-mode)
-- [Local Build & Development](#local-build--development)
-
----
-
-## From-Scratch Tutorial
-
-This section preserves the official upstream **OpenCode + easyeda-api Skill + Run API Gateway** standalone workflow and is written from the perspective of first-time setup on a fresh machine. If you use the repository-root JLC_EDA-MCP, use the integrated mode above instead; the Skill-installation steps in this section are not required.
-
-### 0. What You Will End Up With
-
-After completing this document you will be able to:
-
-1. Install and verify **Node.js** on your machine.
-2. Install and run **OpenCode**.
-3. Install the **easyeda-api** Skill inside OpenCode.
-4. Install and enable the **Run API Gateway** extension in EasyEDA Pro.
-5. Have the AI connect to the running EDA window.
-6. Have the AI directly call EDA APIs — e.g. reading current project info or window state.
-
-### 1. Prerequisites
-
-Before you start, please confirm:
-
-- This tutorial assumes you are on **Windows 10** or **Windows 11**. If your Windows version is older, please upgrade first.
-- To check your Windows version, press **Win**, type `winver`, and hit Enter.
-- You are already familiar with EasyEDA Pro basics.
-- Your machine has internet access (for installing dependencies and downloading tools).
-- You can prepare an AI provider account or API key, or simply use one of OpenCode's free models for a first try.
-- Installing **Node.js 22 LTS** or higher is recommended for best OpenCode/tooling compatibility.
-- Many advanced features in this tutorial depend on model capability. If you want to test complex reasoning, planning, code generation, and long API call chains, prefer a model with strong overall benchmark scores.
-
-### 2. Install Node.js
-
-Both OpenCode and the Skill installer depend on Node.js, so this is step one.
-
-> TIP
->
-> On Windows, if you do not know how to open a terminal, press **Win**, type `PowerShell`, and open **Windows PowerShell** or **PowerShell**. It usually opens in your user directory, which is exactly what we want for the rest of the commands.
-
-#### 2.1 Download and Install
-
-Download **Node.js 22 LTS** or higher from the official site: <https://nodejs.org/en/download>
-
-> TIP
->
-> If you are comfortable with system package managers, you can install via that route. For most first-timers, the official installer is the simplest option.
-
-#### 2.2 Verify the Installation
-
-Open a terminal and run:
-
-```bash
-node -v
-npm -v
+```text
+127.0.0.1:49620-49629
 ```
 
-If you see version numbers such as `v22.x.x` or `v24.x.x`, Node.js is installed successfully.
+WebSocket path:
 
-![Successful `node -v` / `npm -v` output](./images/readme/init_2.png)
-
-#### 2.3 Common Issues
-
-- If you see `command not found`, you usually just need to open a fresh terminal.
-- If you have multiple Node versions installed, make sure the terminal is using the newer one.
-- On Windows, you may need to restart the terminal or even reboot after install.
-
-### 3. Install OpenCode
-
-The recommended way is through **npm**. Run in a terminal:
-
-```bash
-npm install -g opencode-ai
+```text
+/eda
 ```
 
-Then verify:
+Full form:
 
-```bash
-opencode --version
+```text
+ws://127.0.0.1:<port>/eda
 ```
 
-A valid version number means OpenCode is installed.
+The Gateway verifies:
 
-![OpenCode installed successfully](./images/readme/init_3.png)
-
-> TIP
->
-> On macOS / Linux, you can also use the official install script:
->
-> ```bash
-> curl -fsSL https://opencode.ai/install | bash
-> ```
-
-### 4. First Launch and Model Setup
-
-For new users, we recommend starting OpenCode directly from your user directory — don't overthink the "working directory" question yet.
-
-- On Windows, opening **PowerShell** usually lands you in the user directory.
-- On macOS / Linux, opening the terminal usually does the same.
-
-So just run:
-
-```bash
-opencode
+```text
+service = easyeda-bridge
 ```
 
-![OpenCode first-launch screen](./images/readme/init_4_1.png)
+in the handshake.
 
-On first use, complete these initialization steps:
+## 5. How do I know the connection is working?
 
-1. If you have a model provider subscription, run `/connect` inside OpenCode. Otherwise skip to step 5.
-2. Pick the model provider you want to use.
-  ![`/connect` provider screen](./images/readme/init_4_2.png)
-3. Log in or paste your own API key when prompted.
-4. Once you see the "connected" confirmation, return to the main view.
-5. Run `/models` inside OpenCode to switch models (you can pick a free model or one of your paid subscriptions).
-  ![`/models` model picker](./images/readme/init_4_3.png)
+Call:
 
-If you skip this step, even with the Skill and extension installed, OpenCode cannot actually call EDA.
+```text
+easyeda_bridge_status
+```
 
-> TIP
->
-> Free models are great for first impressions, but the more advanced capabilities in this tutorial — complex instruction understanding, multi-step planning, long call chains, result summarization — depend heavily on model quality. For a stable end-to-end test, prefer a model with strong overall benchmark scores.
+Check:
 
-### 5. Install the EasyEDA API Skill
+- `count`
+- `activeWindowId`
+- `windows`
 
-This extension only handles "let EDA join the bridge network". The Skill is what actually starts the Bridge Server, supplies the EasyEDA API documentation, and instructs the AI how to call it.
+If `count > 0`, at least one EasyEDA window is connected.
 
-To make it available to every project, install the Skill into OpenCode's global Skill directory.
+## 6. What if `count: 0`?
 
-OpenCode scans the following common paths:
+Check in this order:
 
-- `~/.agents/skills/`
-- `~/.config/opencode/skills/`
+1. JLC_EDA-MCP is running;
+2. EasyEDA Pro is running;
+3. the Gateway extension is enabled;
+4. external-interaction / WebSocket permission is allowed;
+5. click **API Gateway → Reconnect**;
+6. check for port conflicts on `49620-49629`;
+7. check endpoint security, proxy, or antivirus software for loopback WebSocket blocking.
 
-We recommend `~/.config/opencode/skills/`.
-
-#### 5.1 One-Line Install via ClawHub
-
-For most users, just run the command matching your OS and shell:
-
-If you are on **Windows** and have been following this guide using **PowerShell**, only run the **Windows PowerShell** command below — skip the **Windows cmd** one.
-
-**Windows PowerShell**
+Windows PowerShell:
 
 ```powershell
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
+Get-NetTCPConnection -LocalPort 49620,49621,49622,49623,49624,49625,49626,49627,49628,49629 -ErrorAction SilentlyContinue
 ```
 
-**Windows cmd**
+See [../docs/TROUBLESHOOTING.md](../docs/TROUBLESHOOTING.md) for the full checklist.
 
-```bat
-npx clawhub@latest install easyeda-api --workdir "%USERPROFILE%\.config\opencode" --dir skills
-```
+## 7. Why are there 760 direct tools?
 
-**macOS / Linux**
-
-```bash
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
-```
-
-What the flags mean:
-
-- `--workdir ...`: pin the install location to OpenCode's global config directory.
-- `--dir skills`: drop the Skill into the `skills/` folder that OpenCode scans automatically.
-
-After it finishes, the target path is usually:
-
-- Windows PowerShell: `$HOME/.config/opencode/skills/easyeda-api`
-- Windows cmd: `%USERPROFILE%\.config\opencode\skills\easyeda-api`
-- macOS / Linux: `~/.config/opencode/skills/easyeda-api`
-
-![Installing the Skill](./images/readme/init_5_1.png)
-
-#### 5.2 Manual Install (If the Command Fails)
-
-If you hit network restrictions, can't run `npx`, or `clawhub` simply won't work, you can also install the Skill manually by downloading a zip and dropping it into the right folder.
-
-Direct download link:
-
-- <https://image.lceda.cn/files/easyeda-api.zip>
-
-Manual install steps:
-
-1. Download `easyeda-api.zip` from the link above.
-2. Locate (or create) the `skills` folder inside OpenCode's global Skill directory.
-3. Inside `skills`, create a folder named `easyeda-api`.
-4. Unzip `easyeda-api.zip` directly into that `easyeda-api` folder.
-5. Confirm the structure afterwards.
-
-Recommended target paths:
-
-- Windows: `%USERPROFILE%\.config\opencode\skills\easyeda-api`
-- macOS / Linux: `~/.config/opencode/skills/easyeda-api`
-
-After unzipping, the `easyeda-api` folder should contain:
-
-- `SKILL.md`
-- `package.json`
-- `guide/`
-- `references/`
-- `user-guide/`
-
-Important: do not end up with extra nested directories.
-
-- Correct: `~/.config/opencode/skills/easyeda-api/SKILL.md`
-- Wrong: `~/.config/opencode/skills/easyeda-api/easyeda-api/SKILL.md`
-
-#### 5.3 After Install
-
-After installing, restart OpenCode (or let it re-scan the environment).
-
-If you plan to use OpenCode inside a specific project (e.g. the `pro-api-sdk` repo), you can still run:
+The current API catalog is generated from:
 
 ```text
-/init
+@jlceda/pro-api-types 0.4.23
 ```
 
-inside the project. This bootstraps project context, but it is not a prerequisite for EDA connection.
+It contains:
 
-Confirm the Skill is recognized with `/skills`:
+- 98 root namespaces
+- 760 deduplicated public methods
 
-![Skill recognized in OpenCode](./images/readme/init_5_2.png)
+Full mode registers those 760 methods as direct tools.
 
-### 6. Install This Extension in EasyEDA Pro
+## 8. Why is the total 769?
 
-Now install the **Run API Gateway** extension on the EDA side.
-
-Extension URL:
-
-- <https://ext.lceda.cn/item/oshwhub/run-api-gateway>
-
-After install, open EasyEDA's Extension Manager, find **Run API Gateway**, and ensure these options are enabled:
-
-- **Allow External Interaction**
-- **Show in Top Menu**
-
-![Extension Manager with both options enabled](./images/readme/init_6.png)
-
-After enabling, confirm the **API Gateway** menu appears at the top.
-
-If you see all four menu items, the extension has loaded:
-
-- **Reconnect**
-- **Stop Connection**
-- **Toggle Auto-Connect Status**
-- **About...**
-
-### 7. Open EDA and Wait for the Extension
-
-As long as EasyEDA Pro is running and the extension is loaded, the connection can be established.
-
-The extension auto-scans ports `49620-49629` looking for the Bridge Server started by the Skill. Once the Bridge Server is up, the extension will try to connect automatically.
-
-You don't need to fill in any IP or port manually — the default flow takes care of that.
-
-> TIP
->
-> If EDA was already open and you didn't see a connection, or it failed after 5 retries, you can trigger a manual reconnect via:
->
-> - **API Gateway** → **Reconnect**
-
-![Reconnect prompt after retries](./images/readme/init_7.png)
-
-### 8. Send the Start Command from OpenCode
-
-Return to OpenCode and type:
+Full mode:
 
 ```text
-EasyEDA, start!
+760 direct API tools
++ 6 API management / connection tools
++ 3 extension development / debugging tools
+= 769
 ```
 
-Or, more explicitly:
+See [../docs/COVERAGE_REPORT.md](../docs/COVERAGE_REPORT.md).
 
-```text
-Please use the easyeda-api Skill to connect to the currently open EasyEDA Pro window and report the connection status.
-```
+## 9. What if my client cannot handle that many tools?
 
-OpenCode will then:
-
-1. Read the **easyeda-api** Skill workflow.
-2. Start or check the Bridge Server.
-3. Probe `/health` for service status.
-4. Complete the handshake with the **Run API Gateway** extension on the EDA side.
-5. Prepare to execute subsequent API calls.
-
-If everything works, you should see something like:
-
-- Bridge Server started
-- EDA client found
-- Bridge connected
-- Ready to execute API calls
-- Connected
-- Ready to work
-
-![OpenCode after typing "EasyEDA, start!"](./images/readme/init_8_1.png)
-
-![Connection success screen](./images/readme/init_8_2.png)
-
-### 9. Verify That EDA Is Really Reachable
-
-Once connected, resist the urge to immediately do something complex — start with the simplest possible verification.
-
-You can ask OpenCode something like:
-
-```text
-Please first check whether the current EasyEDA window is connected, and report the current window state, current editor type, and whether any project is open.
-```
-
-Or:
-
-```text
-Please perform a read-only verification: even if no project is currently open, tell me whether this EDA environment is now ready to receive API calls.
-```
-
-If it works, OpenCode will return real data from EDA, not just a generic explanation.
-
-That confirms the full pipeline is up:
-
-**OpenCode** → **easyeda-api Skill** → **Bridge Server** → **Run API Gateway** → **EasyEDA Pro**
-
-### 10. Recommended Newbie Sequence (Copy-Paste Friendly)
-
-If you want a strict step-by-step, run the following in order:
-
-If you are on **Windows** and have been following this guide with **PowerShell**, prefer the **Windows PowerShell** commands below. Only use the **Windows cmd** variants if you are explicitly using cmd.
-
-```bash
-# 1) Install & verify Node.js
-node -v
-npm -v
-
-# 2) Install OpenCode
-npm install -g opencode-ai
-opencode --version
-
-# 3) Install the easyeda-api Skill into OpenCode's global Skill directory
-# Windows PowerShell
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
-
-# Windows cmd
-npx clawhub@latest install easyeda-api --workdir "%USERPROFILE%\.config\opencode" --dir skills
-
-# macOS / Linux
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
-
-# 4) Start OpenCode
-opencode
-```
-
-Inside OpenCode, complete the following in order:
-
-1. Run `/connect` to set up a model provider, or simply pick a free model.
-2. Optionally run `/init` inside your project.
-3. Open EasyEDA Pro and make sure **Run API Gateway** is installed.
-4. In the Extension Manager, confirm **Allow External Interaction** and **Show in Top Menu** are enabled.
-5. Inside OpenCode, type: `EasyEDA, start!`
-6. Once connected, ask the AI to perform a simple read-only API call as a sanity check.
-
----
-
-## Troubleshooting Connection Failures
-
-If you have followed all the steps but still can't connect, work through this checklist in order:
-
-### Check OpenCode
-
-```bash
-opencode --version
-```
-
-If this fails, go back to [Step 3](#3-install-opencode) and reinstall.
-
-### Check the Skill
-
-Inside OpenCode, run:
-
-```text
-/skills
-```
-
-Verify **easyeda-api** shows up in the list.
-
-- If it does, the Skill is installed correctly.
-- If it doesn't, retry the matching install command:
-
-If you are on **Windows** and have been using **PowerShell**, prefer the **Windows PowerShell** command below.
+Use Compact mode:
 
 ```powershell
-# Windows PowerShell
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
-
-# Windows cmd
-npx clawhub@latest install easyeda-api --workdir "%USERPROFILE%\.config\opencode" --dir skills
-
-# macOS / Linux
-npx clawhub@latest install easyeda-api --workdir "$HOME/.config/opencode" --dir skills
+$env:EASYEDA_TOOL_PROFILE="compact"
+npm start
 ```
 
-If the command still fails, fall back to the manual install in [5.2 Manual Install](#52-manual-install-if-the-command-fails).
+Compact mode does not register the 760 direct tools, but API coverage stays the same.
 
-If the installer errors out, the cause is usually Node.js, network, or npm permission related.
-
-### Check the EDA Extension
-
-Confirm the **API Gateway** menu appears in EasyEDA, and confirm both **Allow External Interaction** and **Show in Top Menu** are enabled in the Extension Manager. If the menu is missing, the extension is not actually running.
-
-### Check EDA Is Open
-
-You don't need to open a project, but EasyEDA itself must be running with the extension loaded.
-
-### Manual Reconnect
-
-In the EDA top menu, click:
-
-- **API Gateway** → **Reconnect**
-
-Then return to OpenCode and retry:
+Recommended flow:
 
 ```text
-Please reconnect to EasyEDA and report the current bridge status.
+easyeda_api_search
+    ↓
+easyeda_api_describe
+    ↓
+easyeda_api_call
 ```
 
-### Full Restart
+## 10. How should I discover an API?
 
-If nothing else works, the most reliable recovery is a full restart in this order:
+If you do not know the exact project API name:
 
-1. Quit OpenCode.
-2. Quit EasyEDA Pro.
-3. Reopen EasyEDA Pro and confirm the extension has loaded.
-4. Return to your user directory (or whichever directory you normally use) and run `opencode` again.
-5. Issue the connect command again.
+1. search for `project` with `easyeda_api_search`;
+2. pick a candidate;
+3. inspect it with `easyeda_api_describe`;
+4. call it with `easyeda_api_call`.
 
-### Network & Proxy Issues
+Do not guess method names or argument layouts.
 
-If your machine has to go through a proxy to reach the internet, both `npx clawhub@latest install` and `opencode-ai` itself can be affected. Typical symptoms:
+## 11. How are multiple windows handled?
 
-- `clawhub` hangs on the download step.
-- OpenCode starts but cannot reach any model.
+Every EasyEDA page window registers a separate `windowId`.
 
-Mitigations:
+First call:
 
-- Windows: confirm the proxy is enabled in **Settings → Network & Internet → Proxy**.
-- The shell needs to inherit (or be told about) the system proxy — you can also set `HTTP_PROXY` / `HTTPS_PROXY` explicitly.
-- Some corporate networks intercept `ws://127.0.0.1` handshakes. If EDA shows `Handshake failed: unexpected service`, some other process on 127.0.0.1 is being mistaken for the Bridge. Close any other program occupying ports 49620-49629 and retry.
+```text
+easyeda_bridge_status
+```
 
-### Port Conflicts
+Then use:
 
-If ports `49620-49629` are already in use by other software (common offenders: IDE Live Share, debug proxies, other local services), the extension will keep failing to find the Bridge Server.
+```text
+easyeda_select_window
+```
 
-Diagnostic commands:
+or pass an explicit `windowId` where supported.
+
+## 12. What do the Gateway menu items do?
+
+| Menu | Purpose |
+|---|---|
+| **Reconnect** | Cancel the current connection flow and scan again |
+| **Stop Connection** | Stop connection, heartbeat, and retries |
+| **Toggle Auto-Connect Status** | Change startup auto-connect behavior |
+| **About...** | Show version and current connection status |
+
+## 13. Does the Gateway reconnect automatically?
+
+Yes.
+
+After a successful connection it sends periodic heartbeats. If heartbeat or send fails, it clears the session and scans again.
+
+If no bridge is found, the internal retry policy runs until that retry cycle reaches its maximum; **Reconnect** starts a new connection cycle.
+
+## 14. Why can an API call still fail?
+
+Common reasons include:
+
+- wrong argument count;
+- non-JSON-safe values;
+- APIs that require callbacks, browser objects, File / Blob, or other objects that cannot be passed directly through MCP JSON;
+- the current editor / project state does not satisfy the API precondition;
+- version-, permission-, or context-dependent APIs;
+- timeout.
+
+“760 / 760 generated” means all public methods from the current official type definitions are included in the catalog / allowlist / tool-generation pipeline. It does not mean every method must succeed in every runtime state with arbitrary arguments.
+
+## 15. What if calls time out?
+
+The root server supports:
+
+```text
+EASYEDA_API_TIMEOUT_MS
+```
+
+Before increasing it, determine whether:
+
+- the Gateway is disconnected;
+- the API itself is slow;
+- the API expects unsupported interaction;
+- the current EasyEDA state does not satisfy the call.
+
+Avoid simply making the timeout unlimited.
+
+## 16. Can the Gateway connect to a LAN bridge?
+
+That is not the current JLC_EDA-MCP integration design.
+
+The bridge binds to loopback and the Gateway scans `127.0.0.1`. This is part of the current trust boundary.
+
+## 17. Where did the old easyeda-api Skill instructions go?
+
+This repository no longer maintains that installation tutorial.
+
+JLC_EDA-MCP now directly provides:
+
+- MCP server
+- bridge
+- API catalog
+- tool generation
+- search / describe / call tools
+- multi-window management
+
+Keeping the old Skill / ClawHub / ZIP install steps in the active docs made them look like required JLC_EDA-MCP dependencies.
+
+If you specifically need the official upstream Gateway's standalone Skill workflow, use that upstream project's own documentation.
+
+## 18. How do I develop the Gateway locally?
+
+From this directory:
 
 ```bash
-# Windows PowerShell
-Get-NetTCPConnection -LocalPort 49620,49621,49622,49623,49624,49625,49626,49627,49628,49629 -State Listen
-
-# Windows cmd
-netstat -ano | findstr :4962
-
-# macOS / Linux
-lsof -iTCP:49620-49629 -sTCP:LISTEN
-```
-
-If you find an unexpected occupant, close it and click **API Gateway** → **Reconnect** in EDA.
-
----
-
-## Copy-Paste Prompt Examples
-
-These are good for the first verification right after install:
-
-```text
-Please use the easyeda-api Skill to connect to the currently open EasyEDA Pro window and tell me whether the connection succeeded.
-```
-
-```text
-If already connected, please report the current EDA window state, current editor type, and whether any project is open.
-```
-
-```text
-Please do a read-only check first, without modifying the project, to confirm whether my EDA environment is ready to accept API calls.
-```
-
-```text
-Please list the EasyEDA-related capabilities you currently have access to, and tell me what I can do next.
-```
-
-For more structured exploration, try:
-
-```text
-Please use the easyeda-api Skill to list all currently open documents and canvases in EDA.
-```
-
-```text
-Please find all unconnected traces in the current PCB project and return the result as a table.
-```
-
----
-
-## What Each Component Does
-
-To avoid confusion, here is the responsibility of each component:
-
-- **Node.js** — Provides the runtime so OpenCode and its tooling can execute.
-- **OpenCode** — Your entry point for interacting with the AI.
-- **easyeda-api Skill** — Tells the AI how to connect to and call EDA, and runs the Bridge Server workflow.
-- **Run API Gateway extension** — Lives inside EasyEDA and is responsible for receiving bridged requests and executing code.
-- **EasyEDA Pro** — The actual target program being operated on.
-
-Once you understand the split, debugging becomes much easier:
-
-- OpenCode not installed → AI cannot even start.
-- Skill not installed → AI does not know how to talk to EDA.
-- Extension not installed → EDA cannot accept requests.
-- EDA not running → even with a working bridge, there is nothing to operate on.
-
----
-
-## Developer Local Debug Mode
-
-If you are not an end user but a developer debugging the `easyeda-api-skill` repo locally, you can also start the Bridge Server manually:
-
-```bash
-cd /path/to/easyeda-api-skill
 npm install
-npm run server
-```
-
-The server will auto-pick an available port in `49620-49629`. Then open EasyEDA and make sure this extension is loaded — you are now in local dev mode.
-
-For most users, however, the standard flow (OpenCode + **easyeda-api** Skill auto-connect) is still recommended.
-
----
-
-## Local Build & Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build the extension package
+npm run lint
 npm run build
 ```
 
-After building, the `.eext` package lands in `./build/dist/` and can be installed into EasyEDA Pro.
+This subproject has no standalone test framework, so Gateway code changes should at minimum pass lint and build, then be validated with a real EasyEDA Pro connection.
 
-For more commands and coding conventions, see [AGENTS.md](./AGENTS.md) at the repo root.
+## 19. More documentation
+
+- [API Usage](../docs/API_USAGE.md)
+- [Architecture](../docs/ARCHITECTURE.md)
+- [Coverage Report](../docs/COVERAGE_REPORT.md)
+- [Troubleshooting](../docs/TROUBLESHOOTING.md)
+- [Development Guidelines](./AGENTS.md)

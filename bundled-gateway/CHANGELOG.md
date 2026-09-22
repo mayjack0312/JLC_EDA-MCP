@@ -1,3 +1,13 @@
+# JLC_EDA-MCP documentation cleanup — 2026-09-22
+
+> Documentation-only change. The bundled extension artifact remains **Run API Gateway v1.0.6**.
+
+1. Remove legacy easyeda-api Skill / ClawHub / ZIP-install instructions from the active README and FAQ.
+2. Remove old upstream download and documentation URLs from the active JLC_EDA-MCP documentation path.
+3. Make JLC_EDA-MCP v2.0 the single recommended workflow in this repository.
+4. Keep only a short compatibility note for users who intentionally use the upstream standalone Gateway workflow.
+5. Rewrite the FAQ around current bridge status, Full / Compact profiles, multi-window handling, API discovery, timeouts, and troubleshooting.
+
 # JLC_EDA-MCP repository integration — 2026-09-22
 
 > Documentation-only integration note. The bundled extension artifact remains official **Run API Gateway v1.0.6**; no extension runtime version was changed.
@@ -5,8 +15,8 @@
 1. Clarify that this directory is the EasyEDA runtime Gateway bundled with JLC_EDA-MCP v2.0.
 2. Add the JLC_EDA-MCP architecture: MCP stdio → embedded localhost Bridge → Run API Gateway → EasyEDA Pro `EDA.*`.
 3. Document ports `127.0.0.1:49620-49629`, handshake service `easyeda-bridge`, per-window `windowId`, and multi-window selection.
-4. Clarify that JLC_EDA-MCP integrated mode does **not** require the separate easyeda-api Skill or a separately launched Bridge Server.
-5. Keep the original upstream easyeda-api Skill workflow as a supported standalone mode.
+4. Clarify that JLC_EDA-MCP integrated mode does **not** require a separate easyeda-api Skill or separately launched Bridge Server.
+5. Point standalone upstream users to the upstream project's own documentation instead of duplicating its legacy install flow here.
 6. Add links back to the repository-root API usage and troubleshooting documentation.
 
 # 1.0.6
