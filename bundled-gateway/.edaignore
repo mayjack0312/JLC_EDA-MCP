@@ -18,3 +18,12 @@
 debug.log
 
 /images/readme/
+/.sdk-manifest.json
+/AGENTS.md
+/CHANGELOG.md
+/FAQ.en.md
+/FAQ.md
+/README.en.md
+/README.md
+package.json.backup
+*.eext

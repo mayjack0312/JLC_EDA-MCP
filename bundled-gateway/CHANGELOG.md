@@ -1,3 +1,15 @@
+# JLC_EDA-MCP SDK framework alignment — 2026-09-22
+
+> Run API Gateway runtime remains **v1.0.6**. The bundled development framework is now aligned with official **pro-api-sdk v1.6.27**.
+
+1. Add the official `npm run debug` hot-reload flow using `build/dev.ts` and `ws://localhost:59394`.
+2. Add official shared packaging helpers in `build/utils.ts` and update `build/packaged.ts`.
+3. Add official SDK framework update commands: `update:check` and `update`.
+4. Add SDK manifest generation/version-bump support and `.sdk-manifest.json`.
+5. Add the official project creator entry and update the package to ESM / Bundler-resolution tooling.
+6. Update `@jlceda/pro-api-types` to the official v1.6.27 SDK baseline (`^0.4.23`) and add the WebSocket development dependency.
+7. Preserve the JLC_EDA-MCP-specific Gateway runtime source, extension manifest, integration documentation, and loopback API bridge behavior.
+
 # JLC_EDA-MCP documentation cleanup — 2026-09-22
 
 > Documentation-only change. The bundled extension artifact remains **Run API Gateway v1.0.6**.

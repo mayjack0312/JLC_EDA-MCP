@@ -106,6 +106,58 @@ A full method ID may look like:
 dmt_Project.getCurrentProjectInfo
 ```
 
+## Official SDK 1.6.27 Debug Hot Reload
+
+The development framework in this directory is aligned with the official `easyeda/pro-api-sdk` **v1.6.27**. The runtime extension remains **Run API Gateway v1.0.6**; the SDK baseline and extension version are separate version tracks.
+
+Install the subproject dependencies:
+
+```bash
+cd bundled-gateway
+npm install
+```
+
+Start the official Debug hot-reload flow:
+
+```bash
+npm run debug
+```
+
+The official `build/dev.ts` will:
+
+1. start a Debug WebSocket server at `ws://localhost:59394`;
+2. perform the initial esbuild of `src/index.ts`;
+3. package the current `.eext`;
+4. watch source files for changes;
+5. debounce successful rebuilds for 300 ms;
+6. repackage automatically; and
+7. push the updated `.eext` as Base64 to connected EasyEDA Pro Debug clients.
+
+```text
+source edit
+  ↓
+esbuild watch
+  ↓
+repackage .eext
+  ↓
+ws://localhost:59394
+  ↓
+EasyEDA Pro official Debug / hot-reload client
+```
+
+**Port 59394 is the official SDK Debug hot-reload channel, not the JLC_EDA-MCP API bridge.** Normal MCP/API traffic still uses `127.0.0.1:49620-49629`.
+
+The latest SDK tooling also provides:
+
+```bash
+npm run update:check
+npm run update
+npm run manifest:generate
+npm run manifest:bump
+```
+
+`.sdk-manifest.json` records the official SDK framework version and SHA-256 values of framework files. Project-specific `src/index.ts` and `extension.json` remain owned by JLC_EDA-MCP / Run API Gateway and are not replaced by the official demo.
+
 ## Full and Compact Profiles
 
 ### Full

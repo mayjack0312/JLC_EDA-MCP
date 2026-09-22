@@ -17,8 +17,13 @@
 | `npm run lint` | Run ESLint (checks only) |
 | `npm run fix` | Run ESLint with auto-fix |
 | `npm run build` | Compile + package into `.eext` file at `./build/dist/` |
+| `npm run debug` | Official SDK v1.6.27 hot reload: esbuild watch + package + WebSocket push on port 59394 |
+| `npm run update:check` | Check the official pro-api-sdk framework baseline |
+| `npm run update` | Update SDK framework files from official GitHub/Gitee sources |
+| `npm run manifest:generate` | Regenerate `.sdk-manifest.json` |
+| `npm run manifest:bump` | Bump SDK package patch version and regenerate the manifest |
 
-**No test framework configured.** Verify changes manually via `npm run lint` and `npm run build`.
+**No test framework configured.** Verify changes with `npm run lint` and `npm run build`; validate `npm run debug` with the EasyEDA Pro official Debug client when changing the hot-reload path.
 
 ---
 
@@ -28,6 +33,11 @@
 src/
   index.ts          # Single entry point — all extension logic lives here
 build/
+  dev.ts            # Official SDK hot-reload server on localhost:59394
+  utils.ts          # Shared package/UUID helpers
+  update.ts         # Official SDK framework updater
+  manifest.ts       # SDK manifest generator/version bump
+  create.js         # Official SDK project creator
   packaged.ts       # Packages compiled output into .eext zip
   dist/             # Output: packaged .eext files
 config/
@@ -61,8 +71,11 @@ import process from 'node:process';
 import fs from 'fs-extra';
 import JSZip from 'jszip';
 
-// ✅ JSON imports (resolveJsonModule enabled in tsconfig)
+// ✅ Runtime source may use the existing namespace JSON import through esbuild
 import * as extensionConfig from '../extension.json';
+
+// ✅ Node-side SDK build scripts use ESM JSON import attributes
+import extensionConfig from '../extension.json' with { type: 'json' };
 
 // ❌ Avoid: import * as fs from 'node:fs' — use default import for fs-extra
 ```
@@ -71,7 +84,7 @@ import * as extensionConfig from '../extension.json';
 
 - **Strict mode enabled**: `strict`, `strictNullChecks`, `noImplicitAny`, `useUnknownInCatchVariables` are all ON
 - **Target**: ESNext with DOM lib
-- **Module**: CommonJS (esbuild handles bundling)
+- **Module**: ESNext with Bundler resolution (official SDK v1.6.27 baseline)
 - **Types**: Prefer explicit types for function params/returns; avoid `any`
 - **Interfaces**: Define at module level for message types (see `BridgeMessage`)
 
@@ -160,6 +173,8 @@ The extension runs inside EasyEDA's browser-like environment. Key globals:
 3. **Do not use browser `fetch` for HTTP** — EasyEDA webview enforces mixed-content blocking. Use WebSocket only.
 4. **JSON import must use namespace import** — `import * as config from '../extension.json'` (not default import).
 5. **Pre-commit lint is enforced** — `npm run fix` before committing to avoid hook failures.
+6. **Do not conflate ports** — SDK hot reload uses `localhost:59394`; the JLC_EDA-MCP API Bridge uses `127.0.0.1:49620-49629`.
+7. **Preserve SDK framework parity** — files listed by `.sdk-manifest.json` should remain aligned with official pro-api-sdk v1.6.27 unless a project-specific deviation is explicitly documented.
 
 ---
 
@@ -167,7 +182,8 @@ The extension runs inside EasyEDA's browser-like environment. Key globals:
 
 1. Edit `src/index.ts` (only source file)
 2. Run `npm run lint` to check
-3. Run `npm run build` to verify packaging
-4. Check `./build/dist/` for the generated `.eext` file
+3. Run `npm run build` to verify production packaging
+4. For hot-reload work, run `npm run debug` and connect the EasyEDA Pro official Debug client to the SDK dev channel
+5. Check `./build/dist/` for production `.eext`; Debug mode maintains its live package under `./dist/`
 
 **Keep changes minimal and focused.** This is a small, single-purpose extension.

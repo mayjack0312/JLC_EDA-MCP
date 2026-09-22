@@ -113,3 +113,36 @@ Gateway 断开时，对应窗口的未完成请求会被拒绝，不返回伪成
 - `get_console_logs` 可独立启动监听并读取日志
 
 API Bridge 与浏览器调试属于同一个 MCP Server 中的两条能力链路，可以分别使用。
+
+
+## 8. 官方 SDK Debug 热加载链路
+
+`bundled-gateway` 的开发框架与官方 `easyeda/pro-api-sdk` v1.6.27 对齐，并保留官方 `npm run debug` 热加载实现。
+
+该链路与 MCP/API Bridge 相互独立：
+
+~~~text
+扩展源码 src/index.ts
+        │
+        │ esbuild watch
+        ▼
+bundled-gateway/dist/index.js
+        │
+        │ packageExtension()
+        ▼
+dist/run-api-gateway_v1.0.6.eext
+        │
+        │ WebSocket push
+        │ ws://localhost:59394
+        ▼
+EasyEDA Pro 官方 Debug / 热加载客户端
+~~~
+
+`build/dev.ts` 会执行初始构建和打包，随后监听源码变化。每次成功重建后进行 300 ms 防抖，再重新打包并向所有已连接 Debug 客户端推送新的 `.eext`。
+
+端口职责必须区分：
+
+- `59394`：官方 pro-api-sdk Debug 热加载通道；
+- `49620-49629`：JLC_EDA-MCP → Run API Gateway 的 API Bridge 通道。
+
+SDK 框架版本通过 `bundled-gateway/.sdk-manifest.json` 记录；业务层 `src/index.ts`、`extension.json` 和 JLC_EDA-MCP 集成文档不属于官方 SDK 框架覆盖对象。

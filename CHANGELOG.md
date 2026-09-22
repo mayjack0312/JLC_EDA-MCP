@@ -19,6 +19,7 @@
 - Rename the runtime MCP/server configuration identity to `jlc-eda-mcp` while preserving historical upstream attribution.
 - Keep the tracked `dist` output synchronized with `src`, and make the Windows launcher rebuild before startup.
 - Rebuild the bundled Gateway artifact after removing obsolete tutorial assets.
+- Align the bundled Gateway development framework with official `pro-api-sdk` v1.6.27, including `npm run debug` hot reload on port 59394, SDK update tooling, manifest tooling, ESM/Bundler configuration, and the official shared packaging utilities.
 
 ## 1.3.4
 

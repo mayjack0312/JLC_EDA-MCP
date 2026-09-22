@@ -13,6 +13,7 @@
 - MCP Tool 总数：769
 - 内置仅监听本机的 WebSocket Bridge，无需另启 Bridge 进程
 - 附带官方 `bundled-gateway/run-api-gateway_v1.0.6.eext`
+- bundled-gateway 开发框架对齐官方 `pro-api-sdk` v1.6.27，支持 `npm run debug` 官方热加载
 - 支持 Full / Compact 两种工具暴露模式
 
 完整统计与边界说明见 [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)。API 调用方法见 [`docs/API_USAGE.md`](docs/API_USAGE.md)。
@@ -118,6 +119,21 @@ easyeda_api_call
 | `get_console_logs` | 获取浏览器控制台日志；可独立调用，支持过滤、限制条数和清空缓存 |
 
 `get_console_logs` 不再要求必须先调用 `import_plugin` / `dev_plugin`。若当前没有监听器，它会自动连接浏览器并启动监听。
+
+
+### 官方 SDK Debug 热加载
+
+`bundled-gateway` 的开发框架已对齐官方 `pro-api-sdk` v1.6.27。需要 EasyEDA 官方扩展 Debug 热加载时：
+
+~~~bash
+cd bundled-gateway
+npm install
+npm run debug
+~~~
+
+该模式会在 `ws://localhost:59394` 启动官方 SDK Debug Server，监听源码变化，自动增量构建、重新打包并向 EasyEDA Pro 官方 Debug 客户端推送新的 `.eext`。
+
+> `59394` 是 SDK 热加载专用端口；JLC_EDA-MCP API Bridge 仍使用 `127.0.0.1:49620-49629`。
 
 ## 工作原理
 

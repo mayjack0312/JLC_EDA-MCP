@@ -13,6 +13,7 @@ A complete MCP service for JLCEDA / EasyEDA Pro. It extends the official extensi
 - 769 MCP tools in Full mode
 - Embedded localhost-only WebSocket Bridge; no separate bridge process required
 - Bundled official `bundled-gateway/run-api-gateway_v1.0.6.eext`
+- bundled-gateway development framework aligned with official `pro-api-sdk` v1.6.27, including `npm run debug` hot reload
 - Full and Compact tool profiles
 
 See [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md) for coverage details and [`docs/API_USAGE.md`](docs/API_USAGE.md) for API usage.
@@ -114,6 +115,21 @@ For example, search for project information, inspect the full signature of `dmt_
 | `get_console_logs` | Retrieve browser console logs; can be called independently, with filtering, count limiting and cache clearing |
 
 `get_console_logs` no longer requires a previous `import_plugin` or `dev_plugin` call. If no listener exists, it connects to the browser and starts listening automatically.
+
+
+### Official SDK Debug Hot Reload
+
+The `bundled-gateway` development framework is aligned with official `pro-api-sdk` v1.6.27. To use the official EasyEDA extension Debug hot-reload path:
+
+~~~bash
+cd bundled-gateway
+npm install
+npm run debug
+~~~
+
+This starts the official SDK Debug server at `ws://localhost:59394`, watches source changes, rebuilds incrementally, repackages automatically, and pushes the new `.eext` to connected EasyEDA Pro official Debug clients.
+
+> Port `59394` is dedicated to SDK hot reload; the JLC_EDA-MCP API bridge continues to use `127.0.0.1:49620-49629`.
 
 ## Architecture
 

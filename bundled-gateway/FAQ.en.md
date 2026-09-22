@@ -252,17 +252,50 @@ Keeping the old Skill / ClawHub / ZIP install steps in the active docs made them
 
 If you specifically need the official upstream Gateway's standalone Skill workflow, use that upstream project's own documentation.
 
-## 18. How do I develop the Gateway locally?
+## 18. How do I develop the Gateway locally / use Debug hot reload?
+
+The bundled-gateway development framework is aligned with official **pro-api-sdk v1.6.27**.
 
 From this directory:
 
 ```bash
+cd bundled-gateway
 npm install
 npm run lint
 npm run build
 ```
 
-This subproject has no standalone test framework, so Gateway code changes should at minimum pass lint and build, then be validated with a real EasyEDA Pro connection.
+Production `.eext` output is written under `build/dist/`.
+
+For the official Debug hot-reload flow, run:
+
+```bash
+npm run debug
+```
+
+This starts the official SDK `build/dev.ts` flow:
+
+- Debug WebSocket: `ws://localhost:59394`
+- initial esbuild and packaging
+- continuous source watching
+- 300 ms debounce after successful rebuilds
+- automatic `.eext` repackaging
+- push of the updated package to connected EasyEDA Pro official Debug clients
+
+The live Debug package is maintained under the subproject `dist/` directory.
+
+Port `59394` is only for SDK hot reload. It is separate from the JLC_EDA-MCP API bridge on `49620-49629`.
+
+SDK framework maintenance commands:
+
+```bash
+npm run update:check
+npm run update
+npm run manifest:generate
+npm run manifest:bump
+```
+
+This subproject has no standalone test framework, so Gateway changes should at minimum pass lint and build and be validated with a real EasyEDA Pro connection; hot-reload changes should also be verified with `npm run debug`.
 
 ## 19. More documentation
 

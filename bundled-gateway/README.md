@@ -106,6 +106,58 @@ eda_<namespace>_<method>
 dmt_Project.getCurrentProjectInfo
 ```
 
+## 官方 SDK 1.6.27 Debug 热加载
+
+本目录的开发框架已对齐官方 `easyeda/pro-api-sdk` **v1.6.27**。Gateway 运行版本仍为 **Run API Gateway v1.0.6**；两者分别表示“开发 SDK 基线”和“扩展自身版本”，不要混淆。
+
+进入本目录后安装依赖：
+
+```bash
+cd bundled-gateway
+npm install
+```
+
+启动官方 Debug 热加载：
+
+```bash
+npm run debug
+```
+
+官方 `build/dev.ts` 会：
+
+1. 在 `ws://localhost:59394` 启动 Debug WebSocket Server；
+2. 对 `src/index.ts` 执行初始 esbuild；
+3. 自动打包最新 `.eext`；
+4. 监听源码变化；
+5. 构建成功后进行 300 ms 防抖；
+6. 自动重新打包；
+7. 将新的 `.eext` 以 Base64 推送给已经连接的 EasyEDA Pro Debug 客户端。
+
+```text
+源码修改
+  ↓
+esbuild watch
+  ↓
+重新打包 .eext
+  ↓
+ws://localhost:59394
+  ↓
+EasyEDA Pro 官方 Debug / 热加载客户端
+```
+
+**59394 是官方 SDK Debug 热加载端口，不是 JLC_EDA-MCP API Bridge。** 正常 MCP/API 通道仍使用 `127.0.0.1:49620-49629`。
+
+最新版 SDK 同时提供：
+
+```bash
+npm run update:check
+npm run update
+npm run manifest:generate
+npm run manifest:bump
+```
+
+`.sdk-manifest.json` 用于记录官方 SDK 框架版本及框架文件 SHA-256。当前业务文件 `src/index.ts` 与 `extension.json` 仍由 JLC_EDA-MCP / Run API Gateway 自己维护，不会被替换成官方 demo。
+
 ## Full 与 Compact
 
 ### Full

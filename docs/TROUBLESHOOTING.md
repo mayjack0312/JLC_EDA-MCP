@@ -97,3 +97,54 @@ npm test
 当前 smoke test 以生成目录的方法数量加 9 个固定工具为基准：6 个 API 管理工具 + 3 个扩展开发工具。
 
 如果新增或删除固定 Tool，需要同步更新 smoke test 期望值；如果只是官方 API 数量变化，生成目录会自动参与计算。
+
+
+## `npm run debug` 热加载没有生效
+
+最新版 bundled-gateway 已对齐官方 pro-api-sdk v1.6.27。进入子项目后执行：
+
+~~~bash
+cd bundled-gateway
+npm install
+npm run debug
+~~~
+
+正常启动应看到 Debug Server 监听：
+
+~~~text
+ws://localhost:59394
+~~~
+
+以及初始 build / package / file watcher 日志。
+
+如果没有热加载：
+
+1. 检查 `59394` 是否已被其他程序占用；
+2. 确认 EasyEDA Pro 已进入官方扩展 Debug / 热加载客户端状态并连接该本机端口；
+3. 检查源码修改是否触发 esbuild；
+4. 如果构建报错，SDK 不会推送失败产物，先修复构建错误；
+5. 检查安全软件是否阻止 localhost WebSocket。
+
+Windows 可检查：
+
+~~~powershell
+Get-NetTCPConnection -LocalPort 59394 -ErrorAction SilentlyContinue
+~~~
+
+注意：`easyeda_bridge_status` 只检查 `49620-49629` API Bridge，它不能用于判断 `59394` SDK Debug 通道是否连接。
+
+## 检查 bundled-gateway SDK 是否为最新版基线
+
+在 `bundled-gateway` 中执行：
+
+~~~bash
+npm run update:check
+~~~
+
+当前仓库基线应为 `pro-api-sdk v1.6.27`。框架版本与框架文件列表记录在：
+
+~~~text
+bundled-gateway/.sdk-manifest.json
+~~~
+
+如未来官方 SDK 升级，可先检查变更，再运行 `npm run update`。更新工具只针对官方 SDK 框架文件；JLC_EDA-MCP 的 Gateway 业务源码和扩展清单应继续单独审查，避免被 demo 内容覆盖。

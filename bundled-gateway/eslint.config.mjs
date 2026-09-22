@@ -10,4 +10,8 @@ export default antfu({
 	typescript: true,
 
 	ignores: ['AGENTS.md', 'build/dist/', 'coverage/', 'dist/', 'node_modules/', '.eslintcache', 'debug.log'],
+
+	rules: {
+		'no-console': ['warn', { allow: ['log', 'warn', 'error'] }],
+	},
 });
