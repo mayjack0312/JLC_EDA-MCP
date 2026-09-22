@@ -1,5 +1,5 @@
 {
-  "name": "extension-dev-mcp-tools",
+  "name": "jlc-eda-mcp",
   "version": "2.0.0",
   "description": "Complete MCP bridge for all public JLCEDA/EasyEDA Pro APIs plus extension development tools",
   "main": "dist/index.js",

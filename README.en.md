@@ -35,7 +35,7 @@ npm run build
 npm test
 ~~~
 
-On Windows you can also run `START_MCP_WINDOWS.bat`. It installs dependencies or builds the project when required, then starts the MCP server.
+On Windows you can also run `START_MCP_WINDOWS.bat`. It installs dependencies when missing and rebuilds before every launch so `dist` stays synchronized with the current source, then starts the MCP server.
 
 ### 3. Install the EasyEDA API Gateway
 
@@ -51,7 +51,7 @@ Allow the required WebSocket / external-interaction permissions. The embedded br
 npm run mcp-config
 ~~~
 
-This creates `mcp-config.json` and `opencode.json` in the repository root. Import the appropriate configuration into your AI Agent / MCP client and restart it.
+This creates `mcp-config.json` and `opencode.json` in the repository root, using `jlc-eda-mcp` as the default MCP server ID. Import the appropriate configuration into your AI Agent / MCP client and restart it.
 
 > The generated configuration does not auto-approve all 760 EasyEDA API tools. High-permission auto-approval remains a client-side decision.
 

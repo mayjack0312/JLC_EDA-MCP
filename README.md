@@ -35,7 +35,7 @@ npm run build
 npm test
 ~~~
 
-Windows 也可以直接运行根目录的 `START_MCP_WINDOWS.bat`。脚本会在缺少依赖或构建产物时自动执行安装 / 构建，然后启动 MCP。
+Windows 也可以直接运行根目录的 `START_MCP_WINDOWS.bat`。脚本会在缺少依赖时安装依赖，并在每次启动前执行构建，确保 `dist` 与当前源码一致，然后启动 MCP。
 
 ### 3. 安装 EasyEDA API Gateway
 
@@ -51,7 +51,7 @@ Windows 也可以直接运行根目录的 `START_MCP_WINDOWS.bat`。脚本会在
 npm run mcp-config
 ~~~
 
-会在项目根目录生成 `mcp-config.json` 和 `opencode.json`。将对应配置导入所使用的 AI Agent 后重启 Agent。
+会在项目根目录生成 `mcp-config.json` 和 `opencode.json`，默认 MCP Server ID 为 `jlc-eda-mcp`。将对应配置导入所使用的 AI Agent 后重启 Agent。
 
 > 生成配置默认不会自动批准 760 个 EasyEDA API Tool；是否自动批准高权限工具由客户端侧自行决定。
 

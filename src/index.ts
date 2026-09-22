@@ -6,7 +6,7 @@ import { registerEasyEdaApiTools } from "./tools/easyeda-api.js";
 import { easyEdaBridge } from "./easyeda-bridge.js";
 
 const server = new McpServer({
-  name: "extension-dev-mcp-tools",
+  name: "jlc-eda-mcp",
   version: "2.0.0",
 });
 
@@ -49,7 +49,7 @@ async function main() {
   await easyEdaBridge.start();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("extension-dev-mcp-tools MCP Server started");
+  console.error("jlc-eda-mcp MCP Server started");
 }
 
 main().catch((err) => {

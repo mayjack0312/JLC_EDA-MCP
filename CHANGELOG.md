@@ -16,6 +16,9 @@
 ### Changed
 - Reposition the project from extension-debugging-only MCP to Complete EasyEDA Pro MCP while preserving the original development tools.
 - Document `get_console_logs` as independently callable, matching its current runtime behavior.
+- Rename the runtime MCP/server configuration identity to `jlc-eda-mcp` while preserving historical upstream attribution.
+- Keep the tracked `dist` output synchronized with `src`, and make the Windows launcher rebuild before startup.
+- Rebuild the bundled Gateway artifact after removing obsolete tutorial assets.
 
 ## 1.3.4
 

@@ -7,7 +7,7 @@ const dev_plugin_js_1 = require("./tools/dev-plugin.js");
 const easyeda_api_js_1 = require("./tools/easyeda-api.js");
 const easyeda_bridge_js_1 = require("./easyeda-bridge.js");
 const server = new mcp_js_1.McpServer({
-    name: "extension-dev-mcp-tools",
+    name: "jlc-eda-mcp",
     version: "2.0.0",
 });
 (0, easyeda_api_js_1.registerEasyEdaApiTools)(server);
@@ -20,7 +20,7 @@ server.tool("dev_plugin", "调试插件到嘉立创EDA并持续监听控制台�
     timeout: zod_1.z.number().optional().describe("最大等待秒数，默认300秒（5分钟）"),
     browserPath: zod_1.z.string().optional().describe("浏览器可执行文件的绝对路径（如 Edge、Chrome），不传则自动检测"),
 }, async (args) => ({ content: [await (0, dev_plugin_js_1.devPlugin)(args)] }));
-server.tool("get_console_logs", "获取嘉立创EDA浏览器控制台日志。需先通过 import_plugin 或 dev_plugin 导入插件并开启监听。支持按类型/关键词过滤，可指定返回条数，可选择获取后清空。", {
+server.tool("get_console_logs", "获取嘉立创EDA浏览器控制台日志。可独立调用；若当前尚未建立控制台监听，会自动连接浏览器并启动监听。支持按类型/关键词过滤，可指定返回条数，可选择获取后清空。", {
     filter: zod_1.z.string().optional().describe("过滤关键词，匹配日志类型或内容（如 error、warn、某个函数名）"),
     count: zod_1.z.number().optional().describe("返回最近N条日志，默认50条"),
     clear: zod_1.z.boolean().optional().describe("获取后是否清空日志缓存，默认false"),
@@ -30,7 +30,7 @@ async function main() {
     await easyeda_bridge_js_1.easyEdaBridge.start();
     const transport = new stdio_js_1.StdioServerTransport();
     await server.connect(transport);
-    console.error("extension-dev-mcp-tools MCP Server started");
+    console.error("jlc-eda-mcp MCP Server started");
 }
 main().catch((err) => {
     console.error("Failed to start:", err);

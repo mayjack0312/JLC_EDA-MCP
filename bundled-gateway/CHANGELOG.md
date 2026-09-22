@@ -7,6 +7,8 @@
 3. Make JLC_EDA-MCP v2.0 the single recommended workflow in this repository.
 4. Keep only a short compatibility note for users who intentionally use the upstream standalone Gateway workflow.
 5. Rewrite the FAQ around current bridge status, Full / Compact profiles, multi-window handling, API discovery, timeouts, and troubleshooting.
+6. Remove obsolete `images/readme/*` tutorial screenshots from the repository and future extension packages.
+7. Rebuild the bundled `.eext` so its embedded README / FAQ match the active JLC_EDA-MCP documentation.
 
 # JLC_EDA-MCP repository integration — 2026-09-22
 
