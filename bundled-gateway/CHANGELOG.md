@@ -9,6 +9,7 @@
 5. Add the official project creator entry and update the package to ESM / Bundler-resolution tooling.
 6. Update `@jlceda/pro-api-types` to the official v1.6.27 SDK baseline (`^0.4.23`) and add the WebSocket development dependency.
 7. Preserve the JLC_EDA-MCP-specific Gateway runtime source, extension manifest, integration documentation, and loopback API bridge behavior.
+8. Add the remaining official functional/template resources (`iframe/index.html`, `images/logo.png`) and publish an explicit SDK alignment matrix.
 
 # JLC_EDA-MCP documentation cleanup — 2026-09-22
 

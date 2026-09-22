@@ -150,11 +150,18 @@ EasyEDA Pro official Debug / hot-reload client
 The latest SDK tooling also provides:
 
 ```bash
+npm run compile
+npm run lint
+npm run fix
+npm run build
+npm run debug
 npm run update:check
 npm run update
 npm run manifest:generate
 npm run manifest:bump
 ```
+
+The official v1.6.x project creator (`build/create.js` / package `bin` entry), ESM mode, Bundler module resolution, compressed packaging, `iframe/index.html`, and `images/logo.png` template resources are also synchronized. See [../docs/SDK_ALIGNMENT.md](../docs/SDK_ALIGNMENT.md) for the full alignment matrix.
 
 `.sdk-manifest.json` records the official SDK framework version and SHA-256 values of framework files. Project-specific `src/index.ts` and `extension.json` remain owned by JLC_EDA-MCP / Run API Gateway and are not replaced by the official demo.
 

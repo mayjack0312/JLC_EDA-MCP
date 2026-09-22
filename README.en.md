@@ -13,7 +13,7 @@ A complete MCP service for JLCEDA / EasyEDA Pro. It extends the official extensi
 - 769 MCP tools in Full mode
 - Embedded localhost-only WebSocket Bridge; no separate bridge process required
 - Bundled official `bundled-gateway/run-api-gateway_v1.0.6.eext`
-- bundled-gateway development framework aligned with official `pro-api-sdk` v1.6.27, including `npm run debug` hot reload
+- bundled-gateway development framework aligned across the official `pro-api-sdk` v1.6.27 feature set: Debug hot reload, SDK updater, project creator, manifest tooling, ESM/Bundler, compressed packaging, and template resources
 - Full and Compact tool profiles
 
 See [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md) for coverage details and [`docs/API_USAGE.md`](docs/API_USAGE.md) for API usage.
@@ -174,6 +174,7 @@ The build regenerates the API catalog; the smoke test verifies tool counts, uniq
 - [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md) — official API coverage and safety boundaries
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — bridge, generated catalog, execution path, and security design
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — gateway, connection, timeout, large tool lists, browser log issues
+- [`docs/SDK_ALIGNMENT.md`](docs/SDK_ALIGNMENT.md) — official pro-api-sdk v1.6.27 feature/file alignment matrix
 
 ## Coverage Note
 

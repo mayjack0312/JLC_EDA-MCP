@@ -150,11 +150,18 @@ EasyEDA Pro 官方 Debug / 热加载客户端
 最新版 SDK 同时提供：
 
 ```bash
+npm run compile
+npm run lint
+npm run fix
+npm run build
+npm run debug
 npm run update:check
 npm run update
 npm run manifest:generate
 npm run manifest:bump
 ```
+
+同时已经同步官方 v1.6.x 的项目创建器 `build/create.js` / package `bin` 入口、ESM 模式、Bundler 模块解析、压缩打包、`iframe/index.html` 和 `images/logo.png` 模板资源。完整对齐矩阵见 [../docs/SDK_ALIGNMENT.md](../docs/SDK_ALIGNMENT.md)。
 
 `.sdk-manifest.json` 用于记录官方 SDK 框架版本及框架文件 SHA-256。当前业务文件 `src/index.ts` 与 `extension.json` 仍由 JLC_EDA-MCP / Run API Gateway 自己维护，不会被替换成官方 demo。
 
