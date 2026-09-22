@@ -1,0 +1,30 @@
+{
+  "name": "extension-dev-mcp-tools",
+  "version": "2.0.0",
+  "description": "Complete MCP bridge for all public JLCEDA/EasyEDA Pro APIs plus extension development tools",
+  "main": "dist/index.js",
+  "scripts": {
+    "generate:api": "node scripts/generate-api-catalog.mjs",
+    "build": "npm run generate:api && tsc && node scripts/copy-generated.mjs",
+    "test": "npm run build && node tests/smoke.cjs",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "mcp-config": "node scripts/generate-mcp-config.js"
+  },
+  "engines": {
+    "node": ">=20.17.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "playwright": "^1.50.0",
+    "ws": "^8.18.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@jlceda/pro-api-types": "0.4.23",
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}
