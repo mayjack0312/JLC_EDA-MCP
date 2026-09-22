@@ -133,18 +133,3 @@ Get-NetTCPConnection -LocalPort 59394 -ErrorAction SilentlyContinue
 
 注意：`easyeda_bridge_status` 只检查 `49620-49629` API Bridge，它不能用于判断 `59394` SDK Debug 通道是否连接。
 
-## 检查 bundled-gateway SDK 是否为最新版基线
-
-在 `bundled-gateway` 中执行：
-
-~~~bash
-npm run update:check
-~~~
-
-当前仓库基线应为 `pro-api-sdk v1.6.27`。框架版本与框架文件列表记录在：
-
-~~~text
-bundled-gateway/.sdk-manifest.json
-~~~
-
-如未来官方 SDK 升级，可先检查变更，再运行 `npm run update`。更新工具只针对官方 SDK 框架文件；JLC_EDA-MCP 的 Gateway 业务源码和扩展清单应继续单独审查，避免被 demo 内容覆盖。

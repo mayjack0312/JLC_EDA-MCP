@@ -1,3 +1,13 @@
+# JLC_EDA-MCP SDK scope correction — 2026-09-22
+
+> JLC_EDA-MCP is an MCP connectivity/debugging repository, not a mirror or release build of pro-api-sdk.
+
+1. Keep the official v1.6.27-compatible `npm run debug` hot-reload path required for MCP-assisted extension debugging.
+2. Keep only the upstream Debug implementation, helper packaging functions, esbuild configuration and dependencies required by that path.
+3. Remove SDK project creator, SDK updater, manifest tooling, generic template assets, and unrelated release/build scaffolding.
+4. Treat Debug `.eext` generation as a temporary transport artifact required by the official hot-reload protocol, not as an MCP publishing workflow.
+5. Preserve the Run API Gateway v1.0.6 runtime and JLC_EDA-MCP API Bridge behavior.
+
 # JLC_EDA-MCP SDK framework alignment — 2026-09-22
 
 > Run API Gateway runtime remains **v1.0.6**. The bundled development framework is now aligned with official **pro-api-sdk v1.6.27**.

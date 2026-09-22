@@ -254,50 +254,26 @@ Bridge 绑定本机 loopback，Gateway 扫描 `127.0.0.1`。这是当前安全�
 
 如果你专门要使用官方上游 Gateway 的独立 Skill 模式，请以对应上游项目自身文档为准。
 
-## 18. 本地开发 Gateway / Debug 热加载怎么做？
+## 18. MCP 辅助 Debug 热加载怎么做？
 
-当前 bundled-gateway 开发框架已经对齐官方 **pro-api-sdk v1.6.27**。
+本仓库只接入官方 pro-api-sdk v1.6.27 中与 MCP 辅助调试直接相关的 Debug 热加载能力。
 
-进入本目录：
-
-```bash
+~~~bash
 cd bundled-gateway
 npm install
-npm run lint
-npm run build
-```
-
-生产构建的 `.eext` 输出到 `build/dist/`。
-
-需要官方 Debug 热加载时运行：
-
-```bash
 npm run debug
-```
+~~~
 
-这会启动官方 SDK 的 `build/dev.ts`：
+该命令启动：
 
-- Debug WebSocket：`ws://localhost:59394`
-- 初始 esbuild + 打包
-- 持续监听源码变化
-- 成功重建后 300 ms 防抖
-- 自动重新打包 `.eext`
-- 向已经连接的 EasyEDA Pro 官方 Debug 客户端推送更新包
+- `ws://localhost:59394` Debug WebSocket；
+- esbuild 源码监听；
+- Debug 临时 `.eext` 打包；
+- 成功重建后的自动推送。
 
-Debug 模式的实时包位于子项目 `dist/`。
+这里的“打包”仅是官方热加载协议为了把当前调试版本推送给 EasyEDA Pro 所需的**临时 Debug 包**，不是 MCP 仓库承担扩展发布/发行职责。
 
-注意：`59394` 只用于 SDK 热加载，和 JLC_EDA-MCP 的 `49620-49629` API Bridge 是两套互不替代的通道。
-
-SDK 框架维护命令：
-
-```bash
-npm run update:check
-npm run update
-npm run manifest:generate
-npm run manifest:bump
-```
-
-当前子项目没有单独测试框架，因此业务代码变更至少应通过 lint、build，并在 EasyEDA Pro 中做实际连接验证；修改热加载链路时还应实际验证 `npm run debug`。
+SDK 的 `create`、`update`、manifest、模板和通用发布工具不属于 MCP 必需能力，因此本仓库不镜像这些内容。
 
 ## 19. 进一步文档
 

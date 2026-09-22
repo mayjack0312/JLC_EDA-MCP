@@ -108,7 +108,7 @@ dmt_Project.getCurrentProjectInfo
 
 ## Official SDK 1.6.27 Debug Hot Reload
 
-The development framework in this directory is aligned with the official `easyeda/pro-api-sdk` **v1.6.27**. The runtime extension remains **Run API Gateway v1.0.6**; the SDK baseline and extension version are separate version tracks.
+This directory aligns only the MCP-relevant Debug hot-reload path from official `easyeda/pro-api-sdk` **v1.6.27**. The runtime extension remains **Run API Gateway v1.0.6**. This is not a full SDK mirror and does not own SDK project creation, self-update, manifest, template, or release workflows.
 
 Install the subproject dependencies:
 
@@ -147,23 +147,7 @@ EasyEDA Pro official Debug / hot-reload client
 
 **Port 59394 is the official SDK Debug hot-reload channel, not the JLC_EDA-MCP API bridge.** Normal MCP/API traffic still uses `127.0.0.1:49620-49629`.
 
-The latest SDK tooling also provides:
-
-```bash
-npm run compile
-npm run lint
-npm run fix
-npm run build
-npm run debug
-npm run update:check
-npm run update
-npm run manifest:generate
-npm run manifest:bump
-```
-
-The official v1.6.x project creator (`build/create.js` / package `bin` entry), ESM mode, Bundler module resolution, compressed packaging, `iframe/index.html`, and `images/logo.png` template resources are also synchronized. See [../docs/SDK_ALIGNMENT.md](../docs/SDK_ALIGNMENT.md) for the full alignment matrix.
-
-`.sdk-manifest.json` records the official SDK framework version and SHA-256 values of framework files. Project-specific `src/index.ts` and `extension.json` remain owned by JLC_EDA-MCP / Run API Gateway and are not replaced by the official demo.
+To support this Debug path, the repository keeps only the official `build/dev.ts`, `build/utils.ts`, `config/esbuild.common.ts`, and required dependencies. SDK project creation, self-update, manifest, template resources, and general release tooling are intentionally not mirrored because they are outside the MCP role.
 
 ## Full and Compact Profiles
 

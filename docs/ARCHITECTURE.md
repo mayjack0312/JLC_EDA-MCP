@@ -115,20 +115,20 @@ Gateway 断开时，对应窗口的未完成请求会被拒绝，不返回伪成
 API Bridge 与浏览器调试属于同一个 MCP Server 中的两条能力链路，可以分别使用。
 
 
-## 8. 官方 SDK Debug 热加载链路
+## 8. 官方 SDK Debug 热加载兼容
 
-`bundled-gateway` 的开发框架与官方 `easyeda/pro-api-sdk` v1.6.27 对齐，并保留官方 `npm run debug` 热加载实现。
+`bundled-gateway` 只对齐官方 `easyeda/pro-api-sdk` v1.6.27 中与 MCP 辅助调试直接相关的 Debug 热加载链路，不把 MCP 仓库变成 SDK 模板或发布工程。
 
-该链路与 MCP/API Bridge 相互独立：
+保留的必要链路：
 
 ~~~text
-扩展源码 src/index.ts
+Gateway 源码 src/index.ts
         │
         │ esbuild watch
         ▼
-bundled-gateway/dist/index.js
+dist/index.js
         │
-        │ packageExtension()
+        │ Debug 临时打包
         ▼
 dist/run-api-gateway_v1.0.6.eext
         │
@@ -138,11 +138,23 @@ dist/run-api-gateway_v1.0.6.eext
 EasyEDA Pro 官方 Debug / 热加载客户端
 ~~~
 
-`build/dev.ts` 会执行初始构建和打包，随后监听源码变化。每次成功重建后进行 300 ms 防抖，再重新打包并向所有已连接 Debug 客户端推送新的 `.eext`。
+为实现这条链路，只保留：
 
-端口职责必须区分：
+- `build/dev.ts`：官方 Debug Server / watch / push 逻辑；
+- `build/utils.ts`：Debug 临时 EEXT 打包所需的 UUID、ignore、zip 工具；
+- `config/esbuild.common.ts`：Debug 增量编译配置；
+- ESM / TypeScript / WebSocket 等必要依赖和配置。
 
-- `59394`：官方 pro-api-sdk Debug 热加载通道；
-- `49620-49629`：JLC_EDA-MCP → Run API Gateway 的 API Bridge 通道。
+明确不属于 MCP 职责、因此不镜像：
 
-SDK 框架版本通过 `bundled-gateway/.sdk-manifest.json` 记录；业务层 `src/index.ts`、`extension.json` 和 JLC_EDA-MCP 集成文档不属于官方 SDK 框架覆盖对象。
+- SDK 项目创建器；
+- SDK 自更新器；
+- SDK manifest 生成 / bump；
+- 通用模板 iframe / logo；
+- SDK 发布构建流水线；
+- 多语言 SDK 模板 README。
+
+端口职责：
+
+- `59394`：官方 SDK Debug 热加载兼容通道；
+- `49620-49629`：JLC_EDA-MCP API Bridge 通道。

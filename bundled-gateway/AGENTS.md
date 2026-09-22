@@ -8,22 +8,16 @@
 
 ---
 
-## Build / Lint / Package Commands
+## MCP Debug Commands
 
 | Command | Description |
 |---------|-------------|
-| `npm install` | Install dependencies (Node >=20.17.0 required) |
-| `npm run compile` | Bundle source via esbuild → `./dist/` |
-| `npm run lint` | Run ESLint (checks only) |
-| `npm run fix` | Run ESLint with auto-fix |
-| `npm run build` | Compile + package into `.eext` file at `./build/dist/` |
-| `npm run debug` | Official SDK v1.6.27 hot reload: esbuild watch + package + WebSocket push on port 59394 |
-| `npm run update:check` | Check the official pro-api-sdk framework baseline |
-| `npm run update` | Update SDK framework files from official GitHub/Gitee sources |
-| `npm run manifest:generate` | Regenerate `.sdk-manifest.json` |
-| `npm run manifest:bump` | Bump SDK package patch version and regenerate the manifest |
+| `npm install` | Install Debug helper dependencies (Node >=20.17.0) |
+| `npm run lint` | Check Gateway / Debug helper source |
+| `npm run fix` | ESLint auto-fix |
+| `npm run debug` | Official v1.6.27-compatible hot reload: watch + temporary EEXT + WebSocket push on port 59394 |
 
-**No test framework configured.** Verify changes with `npm run lint` and `npm run build`; validate `npm run debug` with the EasyEDA Pro official Debug client when changing the hot-reload path.
+The MCP repository is **not** an SDK template or extension publishing pipeline. Do not add SDK create/update/manifest/release tooling unless it becomes necessary for MCP connectivity or debugging.
 
 ---
 
@@ -33,17 +27,11 @@
 src/
   index.ts          # Single entry point — all extension logic lives here
 build/
-  dev.ts            # Official SDK hot-reload server on localhost:59394
-  utils.ts          # Shared package/UUID helpers
-  update.ts         # Official SDK framework updater
-  manifest.ts       # SDK manifest generator/version bump
-  create.js         # Official SDK project creator
-  packaged.ts       # Packages compiled output into .eext zip
-  dist/             # Output: packaged .eext files
+  dev.ts            # Official-compatible Debug hot-reload server on localhost:59394
+  utils.ts          # Helpers required by Debug temporary EEXT packaging
 config/
-  esbuild.common.ts # Shared esbuild config
-  esbuild.prod.ts   # Production build script (supports --watch)
-extension.json      # EasyEDA extension manifest (menus, activation events)
+  esbuild.common.ts # Shared esbuild config required by Debug mode
+extension.json      # EasyEDA Gateway manifest (runtime business config)
 ```
 
 **Key constraint**: Source is a single `src/index.ts`. The esbuild config bundles to IIFE format for the EasyEDA runtime. Do not add separate entry points without updating `config/esbuild.common.ts`.
@@ -174,16 +162,15 @@ The extension runs inside EasyEDA's browser-like environment. Key globals:
 4. **JSON import must use namespace import** — `import * as config from '../extension.json'` (not default import).
 5. **Pre-commit lint is enforced** — `npm run fix` before committing to avoid hook failures.
 6. **Do not conflate ports** — SDK hot reload uses `localhost:59394`; the JLC_EDA-MCP API Bridge uses `127.0.0.1:49620-49629`.
-7. **Preserve SDK framework parity** — files listed by `.sdk-manifest.json` should remain aligned with official pro-api-sdk v1.6.27 unless a project-specific deviation is explicitly documented.
+7. **Keep SDK scope narrow** — only mirror upstream files required for MCP connection/debug behavior. Do not chase byte-for-byte SDK template parity.
 
 ---
 
 ## When Making Changes
 
-1. Edit `src/index.ts` (only source file)
-2. Run `npm run lint` to check
-3. Run `npm run build` to verify production packaging
-4. For hot-reload work, run `npm run debug` and connect the EasyEDA Pro official Debug client to the SDK dev channel
-5. Check `./build/dist/` for production `.eext`; Debug mode maintains its live package under `./dist/`
+1. Edit `src/index.ts` for Gateway runtime changes.
+2. Run `npm run lint`.
+3. For hot-reload changes, run `npm run debug` and verify the EasyEDA Pro official Debug client connects to port 59394.
+4. Do not add release/build/template tooling merely because it exists in pro-api-sdk.
 
 **Keep changes minimal and focused.** This is a small, single-purpose extension.

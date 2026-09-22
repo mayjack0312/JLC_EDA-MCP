@@ -13,7 +13,7 @@
 - MCP Tool 总数：769
 - 内置仅监听本机的 WebSocket Bridge，无需另启 Bridge 进程
 - 附带官方 `bundled-gateway/run-api-gateway_v1.0.6.eext`
-- bundled-gateway 开发框架完整对齐官方 `pro-api-sdk` v1.6.27 功能面：Debug 热加载、SDK 自更新、项目创建器、manifest、ESM/Bundler、压缩打包及模板资源
+- bundled-gateway 按官方 `pro-api-sdk` v1.6.27 对齐 MCP 调试所需的 Debug 热加载实现（`npm run debug` / 59394）；不镜像 SDK 的项目创建、更新、manifest、模板或发布工具
 - 支持 Full / Compact 两种工具暴露模式
 
 完整统计与边界说明见 [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)。API 调用方法见 [`docs/API_USAGE.md`](docs/API_USAGE.md)。
@@ -184,7 +184,6 @@ npm test
 - [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)：官方 API 覆盖统计和安全边界
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)：整体架构、Bridge、API Catalog 与安全设计
 - [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)：连接、Gateway、超时、工具过多、浏览器日志等常见问题
-- [`docs/SDK_ALIGNMENT.md`](docs/SDK_ALIGNMENT.md)：官方 pro-api-sdk v1.6.27 功能/文件对齐矩阵
 
 ## 说明
 

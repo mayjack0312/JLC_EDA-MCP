@@ -108,7 +108,7 @@ dmt_Project.getCurrentProjectInfo
 
 ## 官方 SDK 1.6.27 Debug 热加载
 
-本目录的开发框架已对齐官方 `easyeda/pro-api-sdk` **v1.6.27**。Gateway 运行版本仍为 **Run API Gateway v1.0.6**；两者分别表示“开发 SDK 基线”和“扩展自身版本”，不要混淆。
+本目录只对齐官方 `easyeda/pro-api-sdk` **v1.6.27** 中 MCP 辅助调试所需的 Debug 热加载链路。Gateway 运行版本仍为 **Run API Gateway v1.0.6**。这里不是完整 SDK 镜像，也不承担 SDK 项目创建、更新、manifest 或发布职责。
 
 进入本目录后安装依赖：
 
@@ -147,23 +147,7 @@ EasyEDA Pro 官方 Debug / 热加载客户端
 
 **59394 是官方 SDK Debug 热加载端口，不是 JLC_EDA-MCP API Bridge。** 正常 MCP/API 通道仍使用 `127.0.0.1:49620-49629`。
 
-最新版 SDK 同时提供：
-
-```bash
-npm run compile
-npm run lint
-npm run fix
-npm run build
-npm run debug
-npm run update:check
-npm run update
-npm run manifest:generate
-npm run manifest:bump
-```
-
-同时已经同步官方 v1.6.x 的项目创建器 `build/create.js` / package `bin` 入口、ESM 模式、Bundler 模块解析、压缩打包、`iframe/index.html` 和 `images/logo.png` 模板资源。完整对齐矩阵见 [../docs/SDK_ALIGNMENT.md](../docs/SDK_ALIGNMENT.md)。
-
-`.sdk-manifest.json` 用于记录官方 SDK 框架版本及框架文件 SHA-256。当前业务文件 `src/index.ts` 与 `extension.json` 仍由 JLC_EDA-MCP / Run API Gateway 自己维护，不会被替换成官方 demo。
+为了支持这条 Debug 链路，本仓库只保留官方 `build/dev.ts`、`build/utils.ts`、`config/esbuild.common.ts` 及必要依赖。SDK 的项目创建器、自更新、manifest、模板资源和通用发布工具不属于 MCP 职责，不在本仓库镜像。
 
 ## Full 与 Compact
 
