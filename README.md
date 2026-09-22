@@ -1,2 +1,0 @@
-# JLC_EDA-MCP
-JLC_EDA_Pro-MCP
