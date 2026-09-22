@@ -1,107 +1,166 @@
 English | [中文](./README.md)
 
-# extension-dev-mcp-tools
+# JLC_EDA-MCP — Complete EasyEDA Pro MCP
 
-An MCP (Model Context Protocol) service for developing and debugging [JLCEDA & EasyEDA Pro](https://pro.easyeda.com/) extensions. With this MCP, AI Agents can automatically import plugins, collect browser console logs, and debug extensions — hands-free.
+A complete MCP service for JLCEDA / EasyEDA Pro. It extends the official extension-development MCP with automatically generated access to every public API method exposed from the `EDA` root object in the currently pinned `@jlceda/pro-api-types` package, while preserving plugin import, debugging, and browser-console tooling.
 
-## Features
+## v2.0 Coverage
 
-| Tool | Description |
-|------|-------------|
-| `import_plugin` | Import an `.eext` extension file into JLCEDA Pro |
-| `dev_plugin` | Import a plugin and start continuous console error log monitoring |
-| `get_console_logs` | Retrieve browser console output (supports filtering, pagination, and cache clearing) |
+- 98 official API namespaces
+- 760 public API methods, each available as a generated direct MCP tool
+- 6 API management / connection tools
+- 3 extension-development tools: `import_plugin`, `dev_plugin`, `get_console_logs`
+- 769 MCP tools in Full mode
+- Embedded localhost-only WebSocket Bridge; no separate bridge process required
+- Bundled official `bundled-gateway/run-api-gateway_v1.0.6.eext`
+- Full and Compact tool profiles
 
-## Installation
+See [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md) for coverage details and [`docs/API_USAGE.md`](docs/API_USAGE.md) for API usage.
 
-### 1. Build the MCP
+## Quick Start
 
-Choose any location to store the MCP, then run the following commands in your terminal:
+### 1. Requirements
 
-```bash
-git clone https://github.com/easyeda/extension-dev-mcp-tools
-cd ./extension-dev-mcp-tools
+- Node.js 20.17.0+
+- Google Chrome or Microsoft Edge for plugin import / browser console features
+- JLCEDA / EasyEDA Pro
+
+### 2. Clone and build
+
+~~~bash
+git clone https://github.com/mayjack0312/JLC_EDA-MCP.git
+cd JLC_EDA-MCP
 npm install
 npm run build
-```
+npm test
+~~~
 
-Build output is located in the `dist/` folder.
+On Windows you can also run `START_MCP_WINDOWS.bat`. It installs dependencies or builds the project when required, then starts the MCP server.
 
-### 2. Configure MCP
+### 3. Install the EasyEDA API Gateway
 
-Generate the MCP config files:
+Import the following extension into EasyEDA Pro:
 
-```bash
+`bundled-gateway/run-api-gateway_v1.0.6.eext`
+
+Allow the required WebSocket / external-interaction permissions. The embedded bridge binds only to `127.0.0.1` and selects an available port from `49620-49629`.
+
+### 4. Generate MCP configuration
+
+~~~bash
 npm run mcp-config
-```
+~~~
 
-This creates `mcp-config.json` and `opencode.json`.  
-Import the generated config file into your AI Agent following its documentation.
+This creates `mcp-config.json` and `opencode.json` in the repository root. Import the appropriate configuration into your AI Agent / MCP client and restart it.
 
-For example:
+> The generated configuration does not auto-approve all 760 EasyEDA API tools. High-permission auto-approval remains a client-side decision.
 
-> **QwenCode**  
-> **Project scope:** `.qwen/settings.json` in the project root  
-> **User scope:** `~/.qwen/settings.json` (applies to all projects on this machine)  
-> Simply rename the generated `mcp-config.json` to `settings.json` and place it at the corresponding path.
+### 5. Verify the bridge
 
-> **OpenCode**  
-> **Project scope:** `opencode.json` in the project root  
-> **User scope:** `~/.config/opencode/opencode.json` (applies to all projects on this machine)  
-> Simply place the generated `opencode.json` at the corresponding path.
+Call `easyeda_bridge_status`. When `count > 0` and at least one EasyEDA window is connected, official API calls are ready. Use `easyeda_select_window` when multiple windows are connected.
 
-> **Kiro / Trae**  
-> Copy the contents of the generated `mcp-config.json` into the MCP configuration page of the corresponding editor.
+## API Access
 
-Restart your AI Agent after configuration.
+### Full mode (default)
 
-### 3. Usage
+With `EASYEDA_TOOL_PROFILE=all` (the default), every public SDK method is registered as its own MCP tool:
 
-Open your plugin source code folder and ask the AI:  
-`Import this plugin`, `Debug this plugin`, `Get browser logs`  
-The corresponding tools will be called automatically:  
-`import_plugin`, `dev_plugin`, `get_console_logs`  
+`eda_<namespace>_<method>`
 
-To specify a browser, tell the AI:  
-`Import this plugin using Edge`, `Debug this plugin using Chrome`  
-`Get Edge browser logs`, `Get error logs from Chrome`  
+Generated direct tools accept:
 
-## How It Works
+- `args`: JSON arguments in official signature order
+- `windowId`: optional target EasyEDA window ID
 
-1. By default, launches Chrome with remote debugging (port 9222-9231), or connects to an already running instance. A specific browser can be specified via the AI.  
-2. Opens JLCEDA Pro in debug mode. If not logged in, a QR code login page is displayed automatically.  
-3. Login state is cached in the `.browser-data/` directory — no repeated logins needed.  
-4. Uses Playwright to control the browser and complete the plugin upload flow.  
-5. After `import_plugin`, the tool registers `console` and `pageerror` event listeners on the page, capturing all `log` / `warn` / `error` / `info` output (up to 500 entries cached).  
-6. Use `get_console_logs` at any time to pull cached logs — filter by type or keyword, limit the number of results, or clear the cache after retrieval.  
-7. The AI Agent analyzes the collected logs to diagnose plugin behavior and adjust source code accordingly.  
+Full mode is best for MCP clients that can handle a large `tools/list` response.
 
-## Requirements
+### Compact mode
 
-- Node.js 20.17.0+  
-- Google Chrome / Microsoft Edge
+For clients that cannot reliably handle 760 direct tools, set:
 
-## Browser Path Configuration (Optional)
+~~~text
+EASYEDA_TOOL_PROFILE=compact
+~~~
 
-The tool automatically detects the browser installation path:  
-- **Windows:** Checks the registry (`App Paths`) and common install locations  
-- **macOS:** `/Applications/Google Chrome.app/...`  
-- **Linux:** Uses `which` to find `google-chrome` / `chromium`  
+All official APIs remain available through:
 
-If auto-detection fails or you need a specific browser, simply tell the AI:  
-`Import this plugin using Edge`  
-The AI will find the browser path and import automatically.
+~~~text
+easyeda_api_search
+        ↓
+easyeda_api_describe
+        ↓
+easyeda_api_call
+~~~
 
-## Tested Platforms
+For example, search for project information, inspect the full signature of `dmt_Project.getCurrentProjectInfo`, then invoke it with `easyeda_api_call`.
 
-✅ OpenClaw
-✅ OpenCode
-✅ QwenCode
-✅ Kiro
-✅ Trae
+## API Management Tools
 
-## Demo Video
+| Tool | Purpose |
+|---|---|
+| `easyeda_bridge_status` | Show bridge state and connected EasyEDA windows |
+| `easyeda_select_window` | Select the active EasyEDA window for subsequent calls |
+| `easyeda_api_catalog` | Show API type version, namespace count and method count |
+| `easyeda_api_search` | Search official APIs by name, namespace, description or parameter type |
+| `easyeda_api_describe` | Return a method's full signature, parameters, overloads and deprecation state |
+| `easyeda_api_call` | Invoke any allowlisted method from the generated API catalog |
 
-Based on OpenCode:
+## Extension Development Tools
 
-https://github.com/user-attachments/assets/45a66a9c-96e5-43a4-a9af-c94d2007f1a3
+| Tool | Purpose |
+|---|---|
+| `import_plugin` | Import an `.eext` extension and start browser console listening |
+| `dev_plugin` | Import an extension and watch for browser errors |
+| `get_console_logs` | Retrieve browser console logs; can be called independently, with filtering, count limiting and cache clearing |
+
+`get_console_logs` no longer requires a previous `import_plugin` or `dev_plugin` call. If no listener exists, it connects to the browser and starts listening automatically.
+
+## Architecture
+
+~~~text
+AI Agent / MCP Client
+        │ stdio
+        ▼
+JLC_EDA-MCP
+        │ localhost WebSocket
+        ▼
+run-api-gateway_v1.0.6.eext
+        │
+        ▼
+Official EDA.* EasyEDA Pro APIs
+~~~
+
+The API catalog is generated from `@jlceda/pro-api-types`; the project does not manually maintain 760 tool definitions. Unified calls only accept allowlisted `namespace.method` identifiers and JSON-serializable arguments.
+
+## Updating the Official SDK
+
+The repository currently pins `@jlceda/pro-api-types` 0.4.23. After changing that version, run:
+
+~~~bash
+npm install
+npm run build
+npm test
+~~~
+
+The build regenerates the API catalog; the smoke test verifies tool counts, uniqueness, and required management tools.
+
+## Environment Variables
+
+| Variable | Meaning | Default |
+|---|---|---|
+| `EASYEDA_TOOL_PROFILE` | `all` exposes all generated API tools; `compact` uses discovery + unified calls | `all` |
+| `EASYEDA_API_TIMEOUT_MS` | Timeout for one EasyEDA API call | `30000` |
+| `CHROME_PATH` | Explicit Chrome / Chromium / Edge executable path | auto-detect |
+
+## Documentation
+
+- [`docs/API_USAGE.md`](docs/API_USAGE.md) — API discovery, descriptions, calls, multi-window use, Full / Compact modes
+- [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md) — official API coverage and safety boundaries
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — bridge, generated catalog, execution path, and security design
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — gateway, connection, timeout, large tool lists, browser log issues
+
+## Coverage Note
+
+“100% API coverage” means every public class method exposed from the `EDA` root object in the pinned official type definitions is included in the generated catalog, the unified-call allowlist, and the generated direct tools. It does not mean every API is remotely executable with JSON-only parameters. Methods requiring callbacks, browser-native objects, `File` / `Blob`, specific editor states, versions, or permissions remain subject to the real EasyEDA Pro runtime.
+
+This project extends the EasyEDA official `extension-dev-mcp-tools` development/debugging workflow. See `LICENSE` and `NOTICE.txt` for licensing and attribution.

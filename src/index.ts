@@ -35,7 +35,7 @@ server.tool(
 
 server.tool(
   "get_console_logs",
-  "获取嘉立创EDA浏览器控制台日志。需先通过 import_plugin 或 dev_plugin 导入插件并开启监听。支持按类型/关键词过滤，可指定返回条数，可选择获取后清空。",
+  "获取嘉立创EDA浏览器控制台日志。可独立调用；若当前尚未建立控制台监听，会自动连接浏览器并启动监听。支持按类型/关键词过滤，可指定返回条数，可选择获取后清空。",
   {
     filter: z.string().optional().describe("过滤关键词，匹配日志类型或内容（如 error、warn、某个函数名）"),
     count: z.number().optional().describe("返回最近N条日志，默认50条"),

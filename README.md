@@ -1,154 +1,176 @@
 [English](./README.en.md) | 中文
 
-# extension-dev-mcp-tools — Complete EasyEDA Pro MCP
+# JLC_EDA-MCP — Complete EasyEDA Pro MCP
 
-本版本在官方扩展开发调试 MCP 基础上，对接当前 `@jlceda/pro-api-types` 中 `EDA` 根对象开放的全部 API。
+面向嘉立创EDA / EasyEDA Pro 的完整 MCP 服务。在官方扩展开发调试 MCP 基础上，自动对接当前 `@jlceda/pro-api-types` 中 `EDA` 根对象公开的全部 API，并保留插件导入、调试和浏览器控制台日志能力。
 
-## 当前覆盖
+## v2.0 当前覆盖
 
 - 98 个官方 API 命名空间
-- 760 个公开 API 方法，全部生成直接 MCP 工具
-- 6 个连接、目录、搜索、描述及统一调用工具
-- 保留 `import_plugin`、`dev_plugin`、`get_console_logs`
-- 内置本机 WebSocket Bridge，无需另启 Bridge 进程
-- 附带官方 `run-api-gateway_v1.0.6.eext`
+- 760 个公开 API 方法，全部生成直接 MCP Tool
+- 6 个 API 管理 / 连接工具
+- 保留 `import_plugin`、`dev_plugin`、`get_console_logs` 3 个扩展开发工具
+- MCP Tool 总数：769
+- 内置仅监听本机的 WebSocket Bridge，无需另启 Bridge 进程
+- 附带官方 `bundled-gateway/run-api-gateway_v1.0.6.eext`
+- 支持 Full / Compact 两种工具暴露模式
 
-完整统计见 [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)。
+完整统计与边界说明见 [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)。API 调用方法见 [`docs/API_USAGE.md`](docs/API_USAGE.md)。
 
-## 使用
+## 快速开始
 
-1. 安装 Node.js 20.17 或更高版本。
-2. 在嘉立创EDA专业版导入 `bundled-gateway/run-api-gateway_v1.0.6.eext`，并启用扩展的 WebSocket/外部交互权限。
-3. 执行：
+### 1. 环境要求
 
-   ```shell
-   npm install
-   npm run build
-   npm start
-   ```
+- Node.js 20.17.0+
+- Google Chrome 或 Microsoft Edge（插件导入 / 浏览器日志功能使用）
+- 嘉立创EDA / EasyEDA Pro
 
-4. 在 MCP 客户端中使用 `easyeda_bridge_status` 确认 EDA 窗口已连接。
+### 2. 获取并构建
 
-默认注册全部760个直接 API 工具。若客户端无法承载较大的 `tools/list`，设置环境变量 `EASYEDA_TOOL_PROFILE=compact`；此时仍可通过 `easyeda_api_search`、`easyeda_api_describe`、`easyeda_api_call` 访问全部760个官方方法。
-
-直接调用工具统一接收：
-
-- `args`: 按官方签名顺序排列的 JSON 参数数组；
-- `windowId`: 可选，多窗口时指定目标窗口。
-
-## 更新官方 SDK
-
-修改 `package.json` 中 `@jlceda/pro-api-types` 版本后执行：
-
-```shell
+~~~bash
+git clone https://github.com/mayjack0312/JLC_EDA-MCP.git
+cd JLC_EDA-MCP
 npm install
 npm run build
 npm test
-```
+~~~
 
-构建脚本会重新扫描官方类型定义并生成完整目录，不依赖手工维护工具清单。
+Windows 也可以直接运行根目录的 `START_MCP_WINDOWS.bat`。脚本会在缺少依赖或构建产物时自动执行安装 / 构建，然后启动 MCP。
 
----
+### 3. 安装 EasyEDA API Gateway
 
-用于 [嘉立创EDA & EasyEDA 专业版](https://lceda.cn/) 扩展调试的 MCP 服务。使用此MCP可以实现通过 AI Agent 自动完成插件导入、浏览器控制台日志采集等操作，由AI自动导入、调试插件。
+在嘉立创EDA专业版中导入：
 
-## 功能
+`bundled-gateway/run-api-gateway_v1.0.6.eext`
 
-| 工具 | 说明 |
-|------|------|
-| `import_plugin` | 自动将eext导入到嘉立创EDA专业版 |
-| `dev_plugin` | 导入插件并开启控制台错误日志持续监听 |
-| `get_console_logs` | 获取浏览器控制台输出（支持过滤、分页、清空） |
+并允许扩展所需的 WebSocket / 外部交互权限。MCP 内置 Bridge 会在 `127.0.0.1:49620-49629` 中选择可用端口，仅监听本机。
 
+### 4. 生成 MCP 配置
 
-## 安装说明
-### 1.构建MCP
-任意找一个用于存放MCP的位置，然后在终端执行以下命令
-```bash
-git clone https://github.com/easyeda/extension-dev-mcp-tools
-cd ./extension-dev-mcp-tools
-npm install
-npm run build
-```
-构建后产物位于`dist`文件夹下
-
-### 2.配置 MCP
-
-执行以下命令生成MCP配置文件
-
-```bash
+~~~bash
 npm run mcp-config
-```
-此时会生成mcp-config.json和opencode.json  
-将生成的MCP配置文件按照你所使用的AI Agent提供的文档导入  
+~~~
 
-例如：  
+会在项目根目录生成 `mcp-config.json` 和 `opencode.json`。将对应配置导入所使用的 AI Agent 后重启 Agent。
 
-> **QwenCode**  
-> **项目作用域**：位于项目根目录下的 .qwen/settings.json  
-> **用户作用域**：位于 ~/.qwen/settings.json，对本机所有项目生效  
-> 只需将生成的mcp-config.json重命名为settings.json存放到对应路径即可
+> 生成配置默认不会自动批准 760 个 EasyEDA API Tool；是否自动批准高权限工具由客户端侧自行决定。
 
-> **OpenCode**  
-> **项目作用域**：位于项目根目录下的 opencode.json  
-> **用户作用域**：位于 ~/.config/opencode/opencode.json，对本机所有项目生效  
-> 只需将生成的opencode.json存放到对应路径即可
+### 5. 确认连接
 
-> **Kiro/Trae**  
-> 将生成的mcp-config.json内容复制到对应编辑器的MCP配置页即可
+在 MCP Client / Agent 中调用：
 
-完成后重启你所使用的AI Agent
-### 3.使用 MCP
-打开你的插件源码文件夹  
-向AI提出：  
-`帮我导入这个插件`、`帮我调试这个插件`、`获取浏览器日志`    
-此时会自动调用对应的工具：    
-`import_plugin`、`dev_plugin`、`get_console_logs`  
-如果想指定浏览器，可以向AI提出：  
-`帮我导入这个插件，使用Edge浏览器`、`帮我调试这个插件，使用Chrome浏览器`  
-`获取Edge浏览器日志`、`获取Chrome浏览器的错误日志`    
+`easyeda_bridge_status`
+
+若 `count > 0` 且存在已连接窗口，即可开始调用官方 EasyEDA Pro API。多窗口时可使用 `easyeda_select_window` 指定目标窗口。
+
+## API 调用方式
+
+### Full 模式（默认）
+
+默认 `EASYEDA_TOOL_PROFILE=all`，760 个官方方法均注册成独立 MCP Tool。工具名格式为：
+
+`eda_<namespace>_<method>`
+
+直接 API Tool 统一接受：
+
+- `args`：按官方签名顺序排列的 JSON 参数数组
+- `windowId`：可选；多窗口时指定目标 EDA 窗口
+
+Full 模式适合能够承载较大 `tools/list` 的 Agent / MCP Client。
+
+### Compact 模式
+
+若客户端无法稳定承载 760 个直接 Tool，可设置：
+
+~~~text
+EASYEDA_TOOL_PROFILE=compact
+~~~
+
+Compact 模式不注册 760 个独立 Tool，但仍可通过以下流程访问全部官方方法：
+
+~~~text
+easyeda_api_search
+        ↓
+easyeda_api_describe
+        ↓
+easyeda_api_call
+~~~
+
+例如查询当前工程信息时，可先搜索 API，再描述 `dmt_Project.getCurrentProjectInfo` 的完整签名，最后通过 `easyeda_api_call` 调用。
+
+## 6 个 API 管理 / 连接工具
+
+| Tool | 作用 |
+|---|---|
+| `easyeda_bridge_status` | 查看 Bridge、当前活动窗口及全部已连接 EDA 窗口 |
+| `easyeda_select_window` | 多窗口时选择后续 API 调用的目标窗口 |
+| `easyeda_api_catalog` | 查看官方 API 类型版本、命名空间和方法统计 |
+| `easyeda_api_search` | 按方法名、命名空间、说明或参数类型搜索 API |
+| `easyeda_api_describe` | 获取方法完整签名、参数、返回值、重载和弃用信息 |
+| `easyeda_api_call` | 调用自动生成白名单中的任一官方 API |
+
+## 扩展开发 / 调试工具
+
+| Tool | 作用 |
+|---|---|
+| `import_plugin` | 自动导入 `.eext` 插件，并开启浏览器控制台监听 |
+| `dev_plugin` | 导入插件并监听 error；检测到错误后返回日志供 Agent 分析 |
+| `get_console_logs` | 获取浏览器控制台日志；可独立调用，支持过滤、限制条数和清空缓存 |
+
+`get_console_logs` 不再要求必须先调用 `import_plugin` / `dev_plugin`。若当前没有监听器，它会自动连接浏览器并启动监听。
 
 ## 工作原理
 
-1. 未指定浏览器下默认启动 Chrome（开启远程调试端口 9222-9231），或连接已运行的实例
-2. 自动在浏览器中打开嘉立创EDA专业版调试模式，未登录时自动弹出扫码登录页面
-3. 登录状态缓存在 `.browser-data/` 目录，后续无需重复登录
-4. 通过 Playwright 操作浏览器完成插件上传流程
-5. `import_plugin` 导入后自动注册页面 `console` 和 `pageerror` 事件监听，捕获所有 log / warn / error / info 输出，最多缓存 500 条
-6. 通过 `get_console_logs` 随时拉取缓存日志，支持按类型或关键词过滤、限制返回条数、获取后清空缓存
-7. AI Agent可按获取到的日志情况分析插件运行状态，以便对插件源码调整
+### EasyEDA API
 
-## 环境要求
+~~~text
+AI Agent / MCP Client
+        │ stdio
+        ▼
+JLC_EDA-MCP
+        │ localhost WebSocket
+        ▼
+run-api-gateway_v1.0.6.eext
+        │
+        ▼
+EDA.* 官方 EasyEDA Pro API
+~~~
 
-- Node.js 20.17.0+
-- Google Chrome / Microsoft Edge
+API 目录由构建脚本从 `@jlceda/pro-api-types` 自动生成，不手工维护 760 个工具定义。统一调用只允许目录白名单中的 `namespace.method`，参数必须为 JSON 可序列化值。
 
-## 调试用浏览器路径配置（可选）
+### 插件开发调试
 
-工具会自动查找 Chrome 安装路径：
-- Windows：查注册表 `App Paths` 或常见安装位置
-- macOS：`/Applications/Google Chrome.app/...`
-- Linux：通过 `which` 查找 `google-chrome` / `chromium` 
+插件导入 / 控制台日志功能使用 Playwright 控制 Chrome / Edge。登录状态保存在本机 `.browser-data/`，最多缓存 500 条浏览器控制台日志。
 
-如果自动检测失败，或需要使用特定浏览器，可直接对AI说：  
-`帮我导入这个插件，使用edge浏览器`  
-由AI自行查找浏览器路径并导入
+## 更新官方 SDK / API 目录
 
-## 已测试的平台
-  
-✅OpenClaw  
-✅OpenCode  
-✅QwenCode  
-✅Kiro  
-✅Trae  
+当前包使用 `@jlceda/pro-api-types` 0.4.23。升级版本后执行：
 
+~~~bash
+npm install
+npm run build
+npm test
+~~~
 
-## 演示视频
+`npm run build` 会重新扫描官方类型定义并生成 API Catalog；`npm test` 会检查 Tool 数量、重复名称和关键管理工具。
 
-基于opencode:  
+## 环境变量
 
-https://github.com/user-attachments/assets/45a66a9c-96e5-43a4-a9af-c94d2007f1a3
+| 变量 | 说明 | 默认值 |
+|---|---|---|
+| `EASYEDA_TOOL_PROFILE` | `all` 注册全部直接 API Tool；`compact` 仅保留管理 / 统一调用入口 | `all` |
+| `EASYEDA_API_TIMEOUT_MS` | EasyEDA API 单次调用超时 | `30000` |
+| `CHROME_PATH` | 手动指定 Chrome / Chromium / Edge 路径 | 自动检测 |
 
+## 文档
 
+- [`docs/API_USAGE.md`](docs/API_USAGE.md)：完整 API 搜索、描述、调用、多窗口和 Full / Compact 使用方法
+- [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md)：官方 API 覆盖统计和安全边界
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)：整体架构、Bridge、API Catalog 与安全设计
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)：连接、Gateway、超时、工具过多、浏览器日志等常见问题
 
+## 说明
 
+这里的“100% API 覆盖”表示当前官方类型定义中 `EDA` 根对象公开的方法均进入 API Catalog、统一调用白名单并生成直接 MCP Tool；并不表示所有 API 都能通过纯 JSON 参数远程执行。包含回调函数、浏览器对象、`File` / `Blob`，或受特定版本、编辑器状态、权限限制的方法，仍以 EasyEDA Pro 实际运行时行为为准。
+
+本项目基于 EasyEDA 官方 `extension-dev-mcp-tools` 的扩展开发调试能力继续完善。许可证和第三方声明见 `LICENSE` 与 `NOTICE.txt`。
